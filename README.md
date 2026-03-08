@@ -1,2 +1,3 @@
-# My_Project1
-종설용 프로젝트
+# Study Planner 
+
+#스터디 플레너
