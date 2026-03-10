@@ -2,8 +2,8 @@
 
 ### 관련 문서
 
-1. [요구분석명세서] (./docs/srs.md) 
-2. [테스트 시나리오] (./docs/test_scnario.md)
-3. [보고서] (./docs/report.md)
+1. [요구분석명세서](./docs/srs.md) 
+2. [테스트 시나리오](./docs/test_scnario.md)
+3. [보고서](./docs/report.md)
 
 ---
