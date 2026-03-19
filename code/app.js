@@ -8,7 +8,7 @@ app.use(express.static(path.join(__dirname, 'public')));  //정적 파일 선언
 app.use(express.json()); //json 사용한다고 선언
 app.use(express.urlencoded({extended : true})); //body-parser
 
-app.use("/", require("./routes/contactRoutes.js"));
+app.use("/", require("./middleware/route.js"));
 
 app.get("/", (req, res) => { //test
     res.send("Hello, World");
