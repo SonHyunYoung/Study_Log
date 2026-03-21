@@ -1,3 +1,3 @@
 ## 유스케이스
 
-![images](docs/Usecase.png)
+<img src="docs/Usecase.png">
