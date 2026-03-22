@@ -22,8 +22,9 @@
 -
 -
 -
-## 관련 문서
+## 문서
 
+- [유스케이스](docs/usecase.md "유스케이스")
 - [요구분석명세서](docs/srs.md "요구분석명세서")
 - [테스트 시나리오](docs/test_scenario.md "테스트시나리오")
 - [보고서](docs/report.md "보고서")
