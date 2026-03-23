@@ -1,3 +1,5 @@
+require('dotenv').config(); 
+
 const express = require("express");
 
 const router = express.Router(); //router 객체 생성
@@ -74,7 +76,6 @@ post("/login", async (req, res) => { //로그인
     });
 });
 
-
 //회원가입
 router
 .post("/register", async(req, res) => {
@@ -101,7 +102,7 @@ router
 
         await conn.query(
             "INSERT INTO usertbl (email, password_hash, nickname) VALUES (?, ?, ?)",
-            [email, hashedPw, nickname]
+            [email, hashedPw, name]
         ); //유저 정보 db에 등록
 
         res.status(201).json({ //회원가입 성공
@@ -121,7 +122,7 @@ router
         }
     }
 })
-.post("/register/emailCheck", async(res, req) => { //이메일 중복 여부 체크
+.post("/register/emailCheck", async(req, res) => { //이메일 중복 여부 체크
     const {email} = req.body; //body에서 email 가져옴
 
     let conn; //db 연결 변수
@@ -135,10 +136,10 @@ router
 
         conn = await pool.getConnection(); //db 연결
 
-        const exist = conn.query("select id from usertbl where email = ?", (email)); //아매일 가입 여부 확인
+        const exist = await conn.query("select id from usertbl where email = ?", [email]); //아매일 가입 여부 확인
 
         if(exist.length > 0) { //가입 된 경우
-            res.status(409).json({
+            return res.status(409).json({
                 is_variable : false,
                 message : "사용 중인 이메일입니다."
             });
@@ -165,7 +166,10 @@ router
 });
 
 //게시물 crud
-
+router
+.post("/problems", async(req, res) => {
+    
+})
 //오답노트 crud
 
 //메인화면 
