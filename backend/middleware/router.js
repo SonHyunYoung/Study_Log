@@ -8,6 +8,8 @@ const pool = require("../maria"); //db 연결 풀
 const bcrypt = require("bcrypt"); //암호화 모듈
 const jwt = require("jsonwebtoken"); //토큰 관련 모듈
 
+const authmiddleware = require("./auth"); //인증 미들웨어 
+
 //test
 router.get("/", (req, res) => {
     res.send("서버 열렸음 ㅇㅇ");
@@ -76,7 +78,7 @@ post("/login", async (req, res) => { //로그인
     });
 });
 
-//회원가입
+//회원가입, 중복확인, 회원탈퇴
 router
 .post("/register", async(req, res) => {
     let conn; //db 연결 변수
@@ -84,14 +86,14 @@ router
     try{
         const {email, password, name} = req.body;
 
-        if(!email || !password || !name) {
+        if(!email || !password || !name) { //필수 값 입력 하나라도 안된 경우
             return res.status(400).json({
                 err_message : `필수 값을 모두 입력해주세요.`
              });
         }
 
         if(name.length > 15){
-            return res.status(400).json({
+            return res.status(400).json({ //
                 err_message : `이름은 15자까지 입력이 가능합니다.`
             });
         }
@@ -167,10 +169,28 @@ router
 
 //게시물 crud
 router
-.post("/problems", async(req, res) => {
-    
+.post("/problems", authmiddleware, async(req, res) => { //게시물 등록
+
 })
+.get("/problems/lookup", authmiddleware, async(req, res) => {
+
+})
+.put("/problems/update", authmiddleware, async(req, res) => {
+
+})
+.delete("/problems/delete", authmiddleware, async(req, res) => {
+
+});
 //오답노트 crud
+router
+.post("/problems/wrong", authmiddleware, async(req, res) => {
+})
+.get("/problems/wrong/lookup", authmiddleware, async(req, res) => {
+})
+.put("/problems/wrong/update", authmiddleware, async(req, res) => {
+})
+.delete("/problems/wrong/sloved", authmiddleware, async(req, res) => {
+});
 
 //메인화면 
 
