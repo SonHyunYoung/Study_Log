@@ -20,7 +20,6 @@ app.use(express.urlencoded({extended : true})); //body-parser
 
 app.use("/", require("./middleware/router.js"));
 
-
 app.listen(port, () => { //서버 띄우기, 3000번 포트
     console.log(`${port}번 포트에서 실행 중`);
 });
