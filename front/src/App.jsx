@@ -1,18 +1,17 @@
-import { useNavigate } from 'react-router-dom';
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Login from './pages/Login';
-import Main from './pages/Main';
-import './App.css';
+import './App.css'; // ⭐️ 반드시 이 줄이 있어야 스타일이 적용됩니다!
 
 function App() {
   return (
     <Router>
-      <Routes>
-        <Route path="/" element={<Login />} />
-        <Route path='/main' element={<Main />} />
-        <Route path="/login" element={<Login />} />
-      </Routes>
+      <div className="login-screen">
+        <Routes>
+          <Route path="/" element={<Login />} />
+          <Route path="/login" element={<Login />} />
+        </Routes>
+      </div>
     </Router>
   );
 }
