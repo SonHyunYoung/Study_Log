@@ -31,17 +31,18 @@ const Login = () => {
 
   return (
     <div className="login-container">
-      {/* 왼쪽 패널 (60%) */}
+      {/* 왼쪽 패널 */}
       <div className="left-panel">
-        <p>알고리즘 문제 풀이 학습을 기록하는<br/>당신만의 오답 노트 Study LOG.</p>
+        <p>알고리즘 문제 풀이 학습을 기록하는<br/>당신만의 오답 노트 Study LOG</p>
       </div>
 
-      {/* 오른쪽 패널 (40%) */}
+      {/* 오른쪽 패널 */}
       <div className="right-panel">
         <h1 className="title">Study LOG</h1>
         <form onSubmit={handleLogin} className="login-form">
           <input 
             type="email" 
+            title = "이메일을 입력해주세요."
             placeholder="이메일" 
             value={email} 
             onChange={(e) => setEmail(e.target.value)} 
@@ -49,13 +50,14 @@ const Login = () => {
           />
           <input 
             type="password" 
+            title = "비밀번호를 입력해주세요."
             placeholder="비밀번호" 
             value={password} 
             onChange={(e) => setPassword(e.target.value)} 
             required 
           />
 
-          {/* 에러 발생 시에만 나타나는 영역 (버튼을 밀어냄) */}
+          {/* 에러 발생 시에만 나타나는 영역*/}
           {error && (
             <div className="error-box">
               <span className="error-text">{error}</span>

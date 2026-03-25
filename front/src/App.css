@@ -1,4 +1,4 @@
-/* 기본 여백 및 풀스크린 설정 */
+/* 기본 설정 및 풀스크린 유지 */
 * {
   margin: 0;
   padding: 0;
@@ -8,57 +8,59 @@
 body, html, #root {
   width: 100%;
   height: 100%;
-  overflow: hidden;
+  overflow-x: hidden; /* 가로 스크롤 방지 */
 }
 
 .login-container {
   display: flex;
   width: 100vw;
   height: 100vh;
+  transition: flex-direction 0.3s ease; /* 배치 변경 시 부드럽게 */
 }
 
-/* 왼쪽 패널 (60%) */
 .left-panel {
-  flex: 4;
+  flex: 4; 
   background-color: #1e1e1e; 
   color: #ffffff;
   display: flex;
   justify-content: center;
   align-items: center;
-  padding: 60px;
+  padding: 5%; /* 고정 px 대신 % 패딩 사용 */
   text-align: center;
 }
 
 .left-panel p {
-  font-size: 2.2rem;
+  /* clamp(최소, 가변값, 최대): 창 크기에 따라 폰트가 유동적으로 변함 */
+  font-size: clamp(1.2rem, 2.5vw, 2.2rem); 
   line-height: 1.5;
   font-weight: 700;
   word-break: keep-all;
 }
 
-/* 오른쪽 패널 (40%) */
 .right-panel {
-  flex: 6;
+  flex: 6; /* 오른쪽 40% */
   background-color: #ffffff;
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  padding: 40px;
+  padding: 5%;
   border-left: 2px solid #333;
 }
 
+/* 3. 타이틀 및 폼 디자인 */
 .title {
-  font-size: 4rem;
+  font-size: clamp(2.5rem, 6vw, 4rem);
   font-weight: 900;
-  margin-bottom: 50px;
+  margin-bottom: clamp(20px, 5vh, 50px);
   color: #000;
 }
 
-/* 폼 및 입력창 */
 .login-form {
   width: 100%;
-  max-width: 560px;
+  /* 폼의 최소/최대 너비를 잡아주어 너무 퍼지거나 찌그러지지 않게 함 */
+  max-width: 620px; 
+  min-width: 280px;
   display: flex;
   flex-direction: column;
 }
@@ -71,16 +73,20 @@ input {
   border-radius: 12px;
   font-size: 1rem;
   outline: none;
+  transition: all 0.2s;
 }
 
+/* 포커스 시 테두리 강조 (보내주신 색상 유지) */
 input:focus {
-  border : 3px solid #0239a8;
+  border: 3px solid #0239a8;
 }
 
-/* 동적 에러 메시지 스타일 */
+/* 4. 동적 에러 메시지 (중앙 정렬) */
 .error-box {
   width: 100%;
-  padding-bottom: 15px; /* 나타날 때 버튼과의 간격 형성 */
+  padding-bottom: 15px;
+  display: flex;
+  justify-content: center; /* 가로 중앙 */
   animation: fadeIn 0.3s ease-in;
 }
 
@@ -88,8 +94,7 @@ input:focus {
   color: #ff4d4d;
   font-size: 1rem;
   font-weight: bold;
-  display: flex;
-  justify-content: center;
+  text-align: center;
 }
 
 @keyframes fadeIn {
@@ -97,26 +102,23 @@ input:focus {
   to { opacity: 1; transform: translateY(0); }
 }
 
-/* 로그인 버튼 (크기 축소 및 정렬) */
+/* 5. 로그인 버튼 (테두리 없음 & 입력창 너비 일치) */
 .login-btn {
-  width: 100%; /* 요청하신 작은 크기 */
+  width: 100%;
   padding: 16px;
   background-color: #66df88;
   color: #ffffff;
-  border: none;
+  border: none; /* 테두리 제거 */
   border-radius: 10px;
   font-size: 1.1rem;
   font-weight: bold;
   cursor: pointer;
-  align-self: center; /* 중앙 정렬 */
-
-  /*에러 박스 생성 시 간격*/
   margin-top: 5px;
   transition: all 0.2s;
 }
 
 .login-btn:hover {
-  background-color: #55cf78; /*입체감 생성*/
+  background-color: #55cf78;
   box-shadow: 0 4px 15px rgba(102, 223, 136, 0.4);
   transform: translateY(-2px);
 }
@@ -125,9 +127,34 @@ input:focus {
   transform: translateY(0);
 }
 
-/* 하단 링크 */
+/* 6. 하단 링크 */
 .footer-links {
-  margin-top: 20px;
+  margin-top: 25px;
   color: #7b7b7b;
   font-size: 1rem;
+  cursor: pointer;
+}
+
+/* 7. 미디어 쿼리 (화면이 좁아질 때 - 태블릿/모바일) */
+@media (max-width: 850px) {
+  .login-container {
+    flex-direction: column; /* 가로에서 세로 배치로 변경 */
+  }
+
+  .left-panel {
+    flex: 2; /* 소개 영역을 줄임 */
+    padding: 30px;
+  }
+
+  .right-panel {
+    flex: 8; /* 입력 영역에 집중 */
+    border-left: none;
+    border-top: 2px solid #333;
+    padding: 40px 20px;
+  }
+
+  .title {
+    margin-top: 0;
+    margin-bottom: 10px;
+  }
 }
