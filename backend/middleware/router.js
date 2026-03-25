@@ -79,26 +79,35 @@ post("/login", async (req, res) => { //로그인
 });
 
 //회원가입, 중복확인, 회원탈퇴
+
+const PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/; //정규 표현식을 이용한 비밀번호 보안성 확인(8자 이상, 대문자, 소문자 1자 이상 포함, 특수문자 포함)
+
 router
-.post("/register", async(req, res) => {
+.post("/register", async(req, res) => { //회원가입
     let conn; //db 연결 변수
 
     try{
-        const {email, password, name} = req.body;
+        const {email, password, confirmpassword, name} = req.body; //입력 받을 값 이메일, 비밀번호, 비밀번호 확인, 이름
 
-        if(!email || !password || !name) { //필수 값 입력 하나라도 안된 경우
-            return res.status(400).json({
+        if(!email || !password || !confirmpassword || !name) { //필수 값 입력 하나라도 안된 경우
+            res.status(400).json({
                 err_message : `필수 값을 모두 입력해주세요.`
              });
         }
 
-        if(name.length > 15){
-            return res.status(400).json({ //
+        if(password != confirmpassword){ //비밀번호와 확인용 
+            return res.status(400).json({
+                err_message : `비밀번호가 일치하지 않습니다.`
+            });
+        }
+
+        if(name.length > 15){ //이름을 15자 이상 입력한 경우. 
+            res.status(400).json({ 
                 err_message : `이름은 15자까지 입력이 가능합니다.`
             });
         }
 
-        const hashedPw = await bcrypt.hash(password, 10);
+        const hashedPw = await bcrypt.hash(password, 10); //비밀번호 hash로 암호화
 
         conn = await pool.getConnection(); //db 연결
 
@@ -165,20 +174,88 @@ router
             conn.release(); //db 연결 해제
         }
     }
+})
+.delete("/Delete_Account", authmiddleware, async(req, res) => {
+    const { password } = req.body;
+    const user_id = req.user_id;
+
+    let conn;
+    
+    try {
+        if(!password) { //비밀번호 입력하지 않을 시 오류
+            res.status(400).json({
+                err_message : `비밀번호를 입력해주세요.`
+            });
+        }
+
+        conn = await pool.getConnection(); //db 연결
+
+        const [user] = await conn.query("select password from usertbl where id = ?", [user_id]); //유저 정보 체크
+        
+        const isMatch = await bcrypt.compare(password, user.password); //비밀번호 검증
+        if(!isMatch) { //입력한 비밀번호가 일치하지 않았을 때
+            res.status(401).json({
+                err_message : `비밀번호가 일치하지 않습니다.`
+            });
+        }
+
+        await conn.query('delete from usertbl where id = ?', [user_id]); //db에서 유저 정보 삭제, problemtbl은 user 정보가 사라지면 같이 삭제되도록 설정되어 있음.
+
+        res.status(200).json({
+            message : `회원탈퇴에 성공하였습니다. 그동안 서비스를 이용해 주셔서 감사합니다.`
+        });
+
+    } catch (err) {
+        console.log(`회원 탈퇴 오류 발생 : ${err}`); //오류 로그 띄움
+        
+        res.status(500).json({ //상태를 500으로 지정, 오류 메시지 보냄
+            err_message : `서버 오류 입니다.`
+        });
+
+    } finally {
+        if(conn) {
+            conn.release();
+        }
+    }
 });
 
 //게시물 crud
 router
 .post("/problems", authmiddleware, async(req, res) => { //게시물 등록
+    const { problem_id, title, tier, status, memo } = req.body;
+    const user_id = req.user.id; // 토큰에서 추출
+
+    let conn;
+    try {
+        if (!problem_id || !status) return res.status(400).json({ message: "필수 데이터 부족" });
+
+        conn = await pool.getConnection();
+
+        // 문제 정보가 없으면 캐시에 먼저 등록 
+        await conn.query(
+            "INSERT IGNORE INTO problem_cachetbl (id, title, tier) VALUES (?, ?, ?)",
+            [problem_id, title, tier || 0]
+        );
+
+        //실제 유저의 풀이 기록 저장
+        await conn.query(
+            "INSERT INTO problemtbl (user_id, problem_id, status, memo) VALUES (?, ?, ?, ?)",
+            [user_id, problem_id, status, memo || ""]
+        );
+
+        res.status(201).json({ success: true, message: "기록이 등록되었습니다." });
+
+    } catch (err) {
+        res.status(500).json({ message: "등록 실패", error: err.message });
+    } finally { if (conn) conn.release(); }
+})
+.get("/problems/lookup", authmiddleware, async(req, res) => { //게시물 조회
 
 })
-.get("/problems/lookup", authmiddleware, async(req, res) => {
+.put("/problems/update", authmiddleware, async(req, res) => { //게시물 수정
 
 })
-.put("/problems/update", authmiddleware, async(req, res) => {
-
-})
-.delete("/problems/delete", authmiddleware, async(req, res) => {
+.delete("/problems/delete", authmiddleware, async(req, res) => { //게시물 삭제
 
 });
 //오답노트 crud
