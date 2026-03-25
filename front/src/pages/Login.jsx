@@ -8,6 +8,8 @@ const Login = () => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
 
+  const navigate = useNavigate();
+
   const handleLogin = async (e) => {
     e.preventDefault();
     setError(''); // 로그인 시도 시 기존 에러 초기화
@@ -20,6 +22,8 @@ const Login = () => {
 
       if (response.data.success) {
         localStorage.setItem('token', response.data.token);
+
+        navigate('/main');
         alert('로그인 성공!');
         // 메인 페이지 구성 전이므로 현재는 알림만 띄웁니다.
       }
