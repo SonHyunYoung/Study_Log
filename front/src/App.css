@@ -19,7 +19,7 @@ body, html, #root {
 
 /* 왼쪽 패널 (60%) */
 .left-panel {
-  flex: 6;
+  flex: 4;
   background-color: #1e1e1e; 
   color: #ffffff;
   display: flex;
@@ -38,7 +38,7 @@ body, html, #root {
 
 /* 오른쪽 패널 (40%) */
 .right-panel {
-  flex: 4;
+  flex: 6;
   background-color: #ffffff;
   display: flex;
   flex-direction: column;
@@ -58,7 +58,7 @@ body, html, #root {
 /* 폼 및 입력창 */
 .login-form {
   width: 100%;
-  max-width: 360px;
+  max-width: 560px;
   display: flex;
   flex-direction: column;
 }
@@ -86,8 +86,10 @@ input:focus {
 
 .error-text {
   color: #ff4d4d;
-  font-size: 0.85rem;
+  font-size: 1rem;
   font-weight: bold;
+  display: flex;
+  justify-content: center;
 }
 
 @keyframes fadeIn {
@@ -100,7 +102,7 @@ input:focus {
   width: 100%; /* 요청하신 작은 크기 */
   padding: 16px;
   background-color: #66df88;
-  color: #000;
+  color: #ffffff;
   border: none;
   border-radius: 10px;
   font-size: 1.1rem;
@@ -114,8 +116,7 @@ input:focus {
 }
 
 .login-btn:hover {
-  background-color: #55cf78;
-  /* 테두리가 없을 때는 그림자(Shadow)를 살짝 주면 입체감이 생깁니다 */
+  background-color: #55cf78; /*입체감 생성*/
   box-shadow: 0 4px 15px rgba(102, 223, 136, 0.4);
   transform: translateY(-2px);
 }
@@ -126,7 +127,7 @@ input:focus {
 
 /* 하단 링크 */
 .footer-links {
-  margin-top: 35px;
-  color: #aaa;
-  font-size: 0.9rem;
+  margin-top: 20px;
+  color: #7b7b7b;
+  font-size: 1rem;
 }

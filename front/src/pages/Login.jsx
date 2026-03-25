@@ -1,3 +1,5 @@
+// 로그인 페이지
+
 import React, { useState } from 'react';
 import axios from 'axios';
 
@@ -11,7 +13,7 @@ const Login = () => {
     setError(''); // 로그인 시도 시 기존 에러 초기화
 
     try {
-      const response = await axios.post('http://localhost:3000/api/auth/login', {
+      const response = await axios.post('http://localhost:3000/login', {
         email,
         password
       });
@@ -23,7 +25,7 @@ const Login = () => {
       }
     } catch (err) {
       // 서버 에러 메시지 반영
-      setError(err.response?.data?.message || '이메일 또는 비밀번호를 확인해주세요.');
+      setError(err.response?.data?.message);
     }
   };
 
