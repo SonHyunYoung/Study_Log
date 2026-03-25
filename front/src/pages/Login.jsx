@@ -1,6 +1,7 @@
 // 로그인 페이지
 
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import axios from 'axios';
 
 const Login = () => {
@@ -66,8 +67,8 @@ const Login = () => {
         </form>
         
         <div className="footer-links">
-          <span>계정이 없으신가요?  
-            <a href='/registe' title='회원가입 페이지'> 회원가입  </a>
+          <span>계정이 없으신가요? &nbsp;
+            <Link to='/register'>회원가입 </Link>
             </span>
         </div>
       </div>
