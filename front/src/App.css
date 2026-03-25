@@ -209,7 +209,7 @@ body, html, #root { width: 100%; height: 100%; overflow: hidden; }
 
 .register-form-wrapper { width: 100%; max-width: 460px; }
 
-/* 제목 및 구분선 ⭐️ */
+/* 제목 및 구분선 */
 .register-header { margin-bottom: 40px; }
 .register-title { font-size: 2.2rem; font-weight: 900; margin-bottom: 15px; }
 .title-underline { width: 100%; height: 3px; background-color: #333; border-radius: 2px; }
@@ -235,8 +235,8 @@ body, html, #root { width: 100%; height: 100%; overflow: hidden; }
 
 .form-input, 
 .check-btn {
-  height: 48px; /* ⭐️ 높이를 구체적인 숫자로 고정합니다 (예: 48px) */
-  box-sizing: border-box; /* ⭐️ 테두리와 패딩을 포함하여 높이를 계산하게 함 (매우 중요) */
+  height: 48px; /* 높이를 구체적인 숫자로 고정합니다 (예: 48px) */
+  box-sizing: border-box; /* 테두리와 패딩을 포함하여 높이를 계산하게 함 (매우 중요) */
   border-radius: 12px;
   font-size: 1rem;
 }
@@ -244,7 +244,7 @@ body, html, #root { width: 100%; height: 100%; overflow: hidden; }
 /* 일반 입력창 스타일 정의 */
 .form-input {
   width: 100%;
-  padding: 0 16px; /* ⭐️ 위아래 패딩은 0으로 주고, 가로 패딩만 줍니다 */
+  padding: 0 16px; /* 위아래 패딩은 0으로 주고, 가로 패딩만 줍니다 */
   border: 2px solid #ccc; /* 연한 테두리 */
   outline: none;
   transition: border-color 0.2s;
@@ -255,13 +255,13 @@ body, html, #root { width: 100%; height: 100%; overflow: hidden; }
 .email-input-wrapper {
   display: flex;
   gap: 10px;
-  align-items: stretch; /* ⭐️ 자식 요소(인풋, 버튼)들의 높이를 동일하게 맞춤 */
+  align-items: stretch; /* 자식 요소(인풋, 버튼)들의 높이를 동일하게 맞춤 */
   width: 100%;
 }
 
 /* 사용가능확인 버튼 스타일 */
 .check-btn {
-  /* ⭐️ 입력창(.form-input)과 동일한 수직 패딩(14px)을 주어 높이를 일치시킴 */
+  
   padding: 14px 20px; 
   background-color: #4aa363;
   border: none;
