@@ -32,14 +32,14 @@ post("/login", async (req, res) => { //로그인
         const users = await conn.query("SELECT * FROM usertbl WHERE email = ?", [email]); //user 검색
 
         if (users.length === 0) {
-            return res.status(401).json({ message: "가입되지 않은 이메일이거나 비밀번호가 틀렸습니다." });
+            return res.status(401).json({ message: "가입되지 않은 이메일이거나 이메일 혹은 비밀번호가 올바르지 않습니다." });
         }
 
         const user = users[0]; // 첫 번째 유저 정보 꺼내기
 
         const isPasswordValid = await bcrypt.compare(password, user.password_hash); //비밀번호 유효성 검사
         if (!isPasswordValid) {
-            return res.status(401).json({ message: "가입되지 않은 이메일이거나 비밀번호가 틀렸습니다." });
+            return res.status(401).json({ message: "가입되지 않은 이메일이거나 이메일 혹은 비밀번호가 올바르지 않습니다." });
         }
 
         // Access Token 발급 (14일 유지)
