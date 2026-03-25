@@ -135,7 +135,24 @@ input:focus {
   cursor: pointer;
 }
 
-/* 7. 미디어 쿼리 (화면이 좁아질 때 - 태블릿/모바일) */
+.footer-links a {
+  text-decoration: none;
+  color: #0239a8;
+  transition: color 0.2s;
+}
+
+.footer-links a :visited, 
+.footer-links a :active {
+  color: #0239a8;
+}
+
+.footer-links a:hover {
+  color: #0d0395;
+  text-decoration: underline;
+  font-weight: bold;
+}
+
+/* 미디어 쿼리 (화면이 좁아질 때 - 태블릿/모바일) */
 @media (max-width: 850px) {
   .login-container {
     flex-direction: column; /* 가로에서 세로 배치로 변경 */

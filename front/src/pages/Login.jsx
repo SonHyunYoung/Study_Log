@@ -6,7 +6,7 @@ import axios from 'axios';
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+  const [error, setError] = useState(''); 
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -46,7 +46,6 @@ const Login = () => {
             placeholder="이메일" 
             value={email} 
             onChange={(e) => setEmail(e.target.value)} 
-            required 
           />
           <input 
             type="password" 
@@ -54,7 +53,6 @@ const Login = () => {
             placeholder="비밀번호" 
             value={password} 
             onChange={(e) => setPassword(e.target.value)} 
-            required 
           />
 
           {/* 에러 발생 시에만 나타나는 영역*/}
@@ -68,7 +66,9 @@ const Login = () => {
         </form>
         
         <div className="footer-links">
-          <span>계정이 없으신가요? <a href='./Registe'>회원가입</a></span>
+          <span>계정이 없으신가요?  
+            <a href='/registe' title='회원가입 페이지'> 회원가입  </a>
+            </span>
         </div>
       </div>
     </div>
