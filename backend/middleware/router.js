@@ -90,20 +90,26 @@ router
         const {email, password, confirmpassword, name} = req.body; //입력 받을 값 이메일, 비밀번호, 비밀번호 확인, 이름
 
         if(!email || !password || !confirmpassword || !name) { //필수 값 입력 하나라도 안된 경우
-            res.status(400).json({
-                err_message : `필수 값을 모두 입력해주세요.`
+            return res.status(400).json({
+                message : `필수 값을 모두 입력해주세요.`
              });
         }
 
+        if (!PASSWORD_REGEX.test(password)) {
+         return res.status(400).json({ 
+            success: false, 
+            message: "비밀번호가 보안 정책에 맞지 않습니다. (8자 이상, 대소문자, 숫자, 특수문자 포함)" 
+        });
+  }
         if(password != confirmpassword){ //비밀번호와 확인용 
             return res.status(400).json({
-                err_message : `비밀번호가 일치하지 않습니다.`
+                   message : `비밀번호가 일치하지 않습니다.`
             });
         }
 
         if(name.length > 15){ //이름을 15자 이상 입력한 경우. 
-            res.status(400).json({ 
-                err_message : `이름은 15자까지 입력이 가능합니다.`
+            return res.status(400).json({ 
+            message : `이름은 15자까지 입력이 가능합니다.`
             });
         }
 
@@ -117,6 +123,7 @@ router
         ); //유저 정보 db에 등록
 
         res.status(201).json({ //회원가입 성공
+            success : true,
             message : `회원가입에 성공하였습니다.`
         });
 
@@ -141,6 +148,7 @@ router
     try{
         if(!email){ //이메일을 입력하지 않고 시도했을 경우
             res.status(400).json({
+                success : false,
                 err_message : "이메일은 필수값 입니다."
             });
         }
@@ -151,13 +159,13 @@ router
 
         if(exist.length > 0) { //가입 된 경우
             return res.status(409).json({
-                is_variable : false,
+                success : false,
                 message : "사용 중인 이메일입니다."
             });
         }
         else {
             res.status(200).json({ //가입 하지 않은 경우
-                is_variable : true,
+                success : true,
                 message : "사용 가능한 이메일입니다."
             });
         }
