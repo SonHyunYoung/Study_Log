@@ -1,13 +1,14 @@
 // 로그인 페이지
 
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom'; 
 import axios from 'axios';
 
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState(''); 
+  const nevigate = useNavigate();
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -20,9 +21,12 @@ const Login = () => {
       });
 
       if (response.data.success) {
-        localStorage.setItem('token', response.data.token);
-        alert('로그인 성공!');
-        // 메인 페이지 구성 전이므로 현재는 알림만 띄웁니다.
+        // 1. 유저 정보나 토큰이 있다면 저장 (옵션)
+        localStorage.setItem('isLoggedIn', 'true');
+        localStorage.setItem('nickname', response.data.nickname); 
+      
+        // 2. 대시보드로 이동
+        nevigate('/main');
       }
     } catch (err) {
       // 서버 에러 메시지 반영
@@ -34,7 +38,7 @@ const Login = () => {
     <div className="login-container">
       {/* 왼쪽 패널 */}
       <div className="left-panel">
-        <p>알고리즘 문제 풀이 학습을 기록하는<br/>당신만의 오답 노트 Study LOG</p>
+        <p>당신의 학습을 기록하는<br/>당신만의 기록 노트 Study LOG</p>
       </div>
 
       {/* 오른쪽 패널 */}

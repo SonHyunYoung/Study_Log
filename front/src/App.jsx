@@ -11,8 +11,7 @@ function App() {
       <div className="login-screen">
         <Routes>
           <Route path="/" element={<Login />} />
-          <Route path="/login" element={<Login />} />
-          <Route path='/main' element={<Main />}/> 
+          <Route path='/main' element={<Main />} />
           <Route path="/register" element={<Register />} />
         </Routes>
       </div>

@@ -283,3 +283,88 @@ body, html, #root { width: 100%; height: 100%; font-family: 'Pretendard', sans-s
     text-align: center;     /* 문구 중앙 정렬 */
   }
 }
+/* --- Dashboard Styles (Hybrid: Sharp Nav + Round Content) --- */
+
+.db-container {
+  background-color: #f8f9fa;
+  min-height: 100vh;
+}
+
+/* 1. 네비게이션 바: 직선 유지 & 비율 확대 */
+.db-header-dark {
+  background-color: #222;
+  color: #fff;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 2rem 5rem; 
+  border-radius: 0; /* 네비바는 직선 유지 */
+}
+
+/* 2. 요약 섹션: 라운딩 적용 및 스탯 스타일링 */
+.db-summary-section { padding: 3rem 5rem 1rem; }
+.db-summary-card {
+  background: #fff;
+  border: 1px solid #e1e4e8; /* 선을 얇고 부드럽게 변경 */
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05); /* 입체감 추가 */
+  border-radius: 25px; /* 박스 라운딩 적용 */
+  display: flex;
+  padding: 3rem;
+  justify-content: space-around;
+  align-items: center;
+}
+
+.db-summary-unit { text-align: center; }
+.db-summary-label { 
+  font-size: 1rem; 
+  color: #666; 
+  margin-bottom: 0.8rem; 
+  font-weight: 600;
+}
+
+.db-summary-value { 
+  font-size: 2.5rem; 
+  font-weight: 900; 
+  margin: 0;
+}
+
+/* 스탯별 개별 컬러 적용 */
+.val-total { color: #222; }      /* 전체: 블랙 */
+.val-correct { color: #2ecc71; }    /* 정답: 산뜻한 그린 */
+.val-incorrect { color: #e74c3c; }  /* 오답: 경고 레드 */
+
+.db-summary-v-divider { width: 1px; height: 60px; background-color: #eee; }
+
+/* 3. 위젯 박스: 라운딩 적용 */
+.db-widget-container {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2.5rem;
+  padding: 1.5rem 5rem 5rem;
+}
+
+.db-widget-box {
+  background: #fff;
+  border: 1px solid #e1e4e8;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  border-radius: 25px; /* 박스 라운딩 적용 */
+  padding: 2.5rem;
+  min-height: 350px;
+}
+
+.db-widget-box h4 {
+  font-size: 1.2rem;
+  font-weight: 800;
+  margin-bottom: 1.5rem;
+  color: #333;
+}
+
+/* 리스트 디자인 */
+.db-review-list li {
+  padding: 12px 15px;
+  background-color: #f9f9f9;
+  border-radius: 12px; /* 리스트 아이템도 둥글게 */
+  margin-bottom: 10px;
+  font-weight: 600;
+  list-style: none;
+}
