@@ -20,7 +20,7 @@ router.get("/", (req, res) => {
 router.
 post("/login", async (req, res) => { //로그인
     console.log("프론트에서 보낸 데이터:", req.body);
-
+    
     let conn;
     try {
         const { email, password } = req.body;
@@ -78,49 +78,6 @@ post("/login", async (req, res) => { //로그인
     res.status(200).json({
         message : `로그아웃에 성공했습니다.`
     });
-});
-
-//token에서 유저 정보 가져오기
-router
-.get("/user/profile", async (req, res) => {
-    let conn;
-    try {
-        // 1. 헤더에서 토큰 추출
-        const authHeader = req.headers.authorization;
-        const token = authHeader && authHeader.split(' ')[1];
-
-        if (!token) return res.status(401).json({ message: "토큰이 없습니다." });
-
-        // 2. 토큰 검증
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        
-        conn = await pool.getConnection();
-
-        // 3. DB에서 최신 유저 정보 조회 (닉네임 등)
-        const [rows] = await conn.query(
-            "SELECT id, email, nickname FROM usertbl WHERE id = ?", 
-            [decoded.id]
-        );
-
-        if (rows.length === 0) {
-            return res.status(404).json({ message: "유저를 찾을 수 없습니다." });
-        }
-
-        const user = rows[0];
-        res.status(200).json({
-            success: true,
-            user: {
-                nickname: user.nickname,
-                email: user.email
-            }
-        });
-
-    } catch (err) {
-        console.error("프로필 조회 실패:", err);
-        res.status(403).json({ message: "유효하지 않은 토큰입니다." });
-    } finally {
-        if (conn) conn.release();
-    }
 });
 
 //회원가입, 중복확인, 회원탈퇴
@@ -272,6 +229,79 @@ router
     }
 });
 
+//메인 페이지 데이터 관련 
+router
+.get("/main", async(req, res) => {
+    let conn; //db 연결 변수
+
+    try{
+        const token = req.headers.authorization?.split(' ')[1];
+        if (!token) return res.status(401).json({ success: false, message: "인증 필요" });
+
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        const userId = decoded.id;
+
+        conn = await pool.getConnection();
+
+        // 1. 유저 정보 (nickname)
+        const userRows = await conn.query("SELECT nickname FROM usertbl WHERE id = ?", [userId]);
+        const userData = (userRows && userRows.length > 0) ? userRows[0] : { nickname: "test" };
+
+        // 2. 상단 요약 (BigInt -> Number 변환)
+        const summaryRows = await conn.query(
+            `SELECT COUNT(*) as total,
+                COUNT(CASE WHEN status IN ('SUCCESS', 'RETRY_SUCCESS') THEN 1 END) as correct,
+                COUNT(CASE WHEN status = 'FAIL' THEN 1 END) as incorrect
+             FROM problemtbl WHERE user_id = ?`, [userId]
+        );
+        const s = summaryRows[0] || { total: 0, correct: 0, incorrect: 0 };
+
+        // 3. 차트 데이터 (BigInt -> Number 변환)
+        const diffRaw = await conn.query(
+            `SELECT c.tier as name, COUNT(p.id) as value FROM problemtbl p 
+             JOIN problem_cachetbl c ON p.problem_id = c.problem_id 
+             WHERE p.user_id = ? GROUP BY c.tier`, [userId]
+        );
+
+        const langRaw = await conn.query(
+            `SELECT use_language as name, COUNT(*) as problems FROM problemtbl 
+             WHERE user_id = ? AND use_language IS NOT NULL GROUP BY use_language ORDER BY problems DESC`, [userId]
+        );
+
+        const reviewList = await conn.query(
+            `SELECT p.id, c.title, c.tier as diff FROM problemtbl p
+             JOIN problem_cachetbl c ON p.problem_id = c.problem_id
+             WHERE p.user_id = ? AND p.status = 'FAIL' ORDER BY p.updated_at DESC LIMIT 3`, [userId]
+        );
+
+        // ⭐️ JSON 응답 시 BigInt 에러 방지를 위해 Number() 강제 변환
+        res.status(200).json({
+            success: true,
+            user: userData,
+            stats: {
+                summary: {
+                    total: Number(s.total),
+                    correct: Number(s.correct),
+                    incorrect: Number(s.incorrect)
+                },
+                difficultyData: diffRaw.map(d => ({ name: d.name, value: Number(d.value) })),
+                languageData: langRaw.map(l => ({ name: l.name, problems: Number(l.problems) })),
+                reviewList: reviewList || []
+            }
+        });
+    } catch(err) {
+        console.log(`데이터 읽어오는 중 오류 발생 : ${err}`);
+
+        res.status(500).json({
+            err_message : `서버 오류 입니다.`
+        });
+
+    } finally {
+        if(conn) {
+            conn.release();
+        }
+    }
+})
 //게시물 crud
 router
 .post("/problems", authmiddleware, async(req, res) => { //게시물 등록
