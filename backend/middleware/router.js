@@ -19,9 +19,8 @@ router.get("/", (req, res) => {
 //로그인, 로그아웃
 router.
 post("/login", async (req, res) => { //로그인
-    console.log("프론트에서 보낸 데이터:", req.body);
-    
     let conn;
+    
     try {
         const { email, password } = req.body;
 
@@ -274,7 +273,7 @@ router
              WHERE p.user_id = ? AND p.status = 'FAIL' ORDER BY p.updated_at DESC LIMIT 3`, [userId]
         );
 
-        // ⭐️ JSON 응답 시 BigInt 에러 방지를 위해 Number() 강제 변환
+        // JSON 응답 시 BigInt 에러 방지를 위해 Number() 강제 변환
         res.status(200).json({
             success: true,
             user: userData,
