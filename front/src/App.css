@@ -358,7 +358,10 @@ body, html, #root { width: 100%; height: 100%; font-family: 'Pretendard', sans-s
 
 /* --- 2. 요약 통계 카드 (Round & Styled) --- */
 .db-summary-section {
-  padding: 3.5rem 5rem 1.5rem;
+  width: 100%;
+  padding: 0 50px;
+  /* 아래 박스들과의 간격 축소 (기존값 확인 후 15px~20px 추천) */
+  margin-bottom: 15px;
 }
 
 .db-summary-card {
@@ -559,7 +562,6 @@ body { font-family: 'Pretendard', sans-serif; background-color: #f4f7f9; color: 
 /* 본문 레이아웃 */
 .db-container { max-width: 1200px; margin: 0 auto; }
 .db-page-content { padding: 0 50px 50px 50px; }
-.db-page-title { font-size: 26px; font-weight: 800; border-left: 6px solid #2ecc71; padding-left: 20px; margin-bottom: 30px; }
 
 /* 테이블 위젯 박스 */
 .db-widget-box { background: #fff; border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.05); padding: 30px; }
@@ -597,3 +599,57 @@ body { font-family: 'Pretendard', sans-serif; background-color: #f4f7f9; color: 
 .btn-add-problem:hover { background-color: #27ae60; }
 
 .pagination { display: flex; justify-content: center; margin-top: 30px; gap: 20px; color: #bbb; font-weight: 700; cursor: pointer; }
+
+/* App.css에 추가/확인 */
+
+/* 오답 노트 페이지 전용 타이틀 강조 (선택사항) */
+.db-page-title {
+  color: #222;
+  font-size: 28px;
+  font-weight: 800;
+  border-left: 6px solid #000; /* 오답이니까 빨간색 포인트로 차별화! */
+  padding-left: 15px;
+}
+
+/* 테이블 행 클릭 유도 */
+.db-custom-table tbody tr {
+  cursor: pointer;
+  transition: transform 0.1s ease;
+}
+
+.db-custom-table tbody tr:active {
+  transform: scale(0.99); /* 클릭 시 살짝 눌리는 느낌 */
+}
+
+/* 1. 전체 컨테이너 제한 해제 */
+.db-container {
+  width: 100%;           /* 고정 폭 대신 100% 사용 */
+  max-width: 1800px;     /* 너무 무한정 늘어나면 가독성이 해치니 1800px 정도로 넉넉히 */
+  margin: 0 auto;
+  min-height: 100vh;     /* 세로 높이도 화면에 꽉 차게 */
+  background-color: #f4f7f9;
+}
+
+/* 2. 헤더 및 섹션 패딩 조절 (여백을 %나 vw로 주면 더 유연해집니다) */
+.db-header-dark, 
+.db-summary-section, 
+.db-page-content {
+  padding-left: 4%;      /* 고정 50px 대신 화면 비율(4%)로 변경 */
+  padding-right: 4%;
+}
+
+/* 3. 위젯 그리드 확장 */
+.db-widget-container {
+  display: grid;
+  /* 화면이 넓어지면 3열이 너무 길어 보일 수 있으니, 
+     최소 폭(400px)을 보장하면서 자동으로 열을 채우게 설정 */
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); 
+  gap: 25px;
+  width: 100%;
+}
+
+/* 4. 위젯 박스 내부 차트 크기 (이미 100%겠지만 한 번 더 체크) */
+.db-chart-space {
+  width: 100%;
+  height: 300px;         /* 높이도 조금 더 키우면 꽉 차 보입니다 */
+}

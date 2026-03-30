@@ -1,148 +1,103 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { 
-  PieChart, Pie, Cell, Tooltip, ResponsiveContainer, 
-  BarChart, Bar, XAxis, YAxis 
-} from 'recharts';
-import Header from '../components/Header'; // 👈 분리한 헤더 불러오기
+import '../App.css';
 
-
-const MainDashboard = () => {
+const IncorrectNote = () => {
   const navigate = useNavigate();
   const [dbData, setDbData] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // 1. 데이터 가져오기 (JWT 인증 및 에러 핸들링)
+  // 1. 데이터 가져오기 (MainDashboard와 동일한 로직)
   useEffect(() => {
-    const fetchDashboardData = async () => {
+    const fetchIncorrect = async () => {
       try {
         const token = localStorage.getItem('token');
-        if (!token) {
-          navigate('/'); // 토큰 없으면 로그인으로
-          return;
-        }
+        if (!token) { navigate('/login'); return; }
 
-        const response = await axios.get('http://localhost:3000/main', {
+        const response = await axios.get('http://localhost:3000/incorrect', {
           headers: { Authorization: `Bearer ${token}` }
         });
 
         if (response.data.success) {
-          setDbData(response.data);
+          setDbData(response.data); // data와 user를 모두 저장
         }
       } catch (err) {
-        console.error("Dashboard Fetch Error:", err);
-        if (err.response?.status === 401) navigate('/');
+        console.error("Fetch Error:", err);
+        if (err.response?.status === 401 || err.response?.status === 403) navigate('/login');
       } finally {
-        setLoading(false);
+        setLoading(false); // 무조건 로딩 해제
       }
     };
-
-    fetchDashboardData();
+    fetchIncorrect();
   }, [navigate]);
 
-  // 2. 로딩 화면
-  if (loading) {
-    return <div className="db-loading-container">데이터를 분석 중입니다...</div>;
-  }
+  if (loading) return <div className="db-loading-container">오답 노트 로딩 중...</div>;
 
-  // 3. 데이터 안전 추출 (철벽 방어 로직)
   const { 
-    user = { nickname: 'USER' }, 
-    stats = { 
-      summary: { total: 0, correct: 0, incorrect: 0 }, 
-      difficultyData: [], 
-      languageData: [], 
-      reviewList: [] 
-    } 
+    user = { nickname: '사용자' }, 
+    data: notes = [] 
   } = dbData || {};
-
-  const { summary, difficultyData, languageData, reviewList } = stats;
-  const COLORS = ['#333', '#555', '#777', '#999', '#bbb'];
 
   return (
     <div className="db-container">
-      {/* --- 공통 헤더 컴포넌트 (직선 디자인) --- */}
-      <Header nickname={user.nickname} />
-
-      {/* --- 요약 스탯 섹션 (라운딩 디자인) --- */}
-      <section className="db-summary-section">
-        <div className="db-summary-card">
-          <div className="db-summary-unit">
-            <p className="db-summary-label">푼 문제 수</p>
-            <h3 className="db-summary-value val-total">{summary.total}</h3>
-          </div>
-          <div className="db-summary-v-divider"></div>
-          <div className="db-summary-unit">
-            <p className="db-summary-label">정답</p>
-            <h3 className="db-summary-value val-correct">{summary.correct}</h3>
-          </div>
-          <div className="db-summary-v-divider"></div>
-          <div className="db-summary-unit">
-            <p className="db-summary-label">오답</p>
-            <h3 className="db-summary-value val-incorrect">{summary.incorrect}</h3>
-          </div>
+      {/* --- 다크 헤더 --- */}
+      <header className="db-header-dark">
+        <div className="db-logo" onClick={() => navigate('/main')}>Study LOG</div>
+        <nav className="db-nav-center">
+          <span className="db-nav-link" onClick={() => navigate('/main')}>메인 페이지</span>
+          <span className="db-nav-link" onClick={() => navigate('/problems')}>문제 목록</span>
+          <span className="db-nav-link active">오답 노트</span>
+        </nav>
+        <div className="db-user-info">
+          {/* 이제 '사용자'가 아니라 실제 닉네임이 뜹니다 */}
+          <span className="db-nickname-text"><strong>{user.nickname}</strong>님</span>
+          <span className="db-divider-small">|</span>
+          <span className="db-logout-text" onClick={() => { localStorage.clear(); navigate('/'); }}>로그아웃</span>
         </div>
-      </section>
+      </header>
 
-      {/* --- 하단 위젯 그리드 (라운딩 디자인) --- */}
-      <section className="db-widget-container">
-        {/* 복습 필요 위젯 */}
+      {/* --- 본문 --- */}
+      <main className="db-page-content">
+        <div className="db-title-area">
+          <h2 className="db-page-title">나의 오답 노트</h2>
+        </div>
+
         <div className="db-widget-box">
-          <h4>복습 필요</h4>
-          <ul className="db-review-list">
-            {reviewList.length > 0 ? (
-              reviewList.map((item, idx) => (
-                <li key={item.id || idx}>{idx + 1}. {item.title}</li>
-              ))
-            ) : (
-              <li className="no-data-item">오답이 없습니다. 완벽해요! ✨</li>
-            )}
-          </ul>
-        </div>
+          <table className="db-custom-table">
+            <thead>
+              <tr>
+                <th>id</th>
+                <th>문제번호</th>
+                <th>제 목</th>
+                <th>난이도</th>
+                <th>등록 날짜</th>
+              </tr>
+            </thead>
+            <tbody>
+              {notes.length > 0 ? (
+                notes.map((n, index) => (
+                  <tr key={n.id || index}>
+                    <td>{index + 1}</td>
+                    <td>{n.problem_id}</td>
+                    <td className="table-title-cell">{n.title}</td>
+                    <td><span className={`tier-badge tier-${n.tier}`}>{n.tier}</span></td>
+                    <td>{new Date(n.created_at).toLocaleDateString()}</td>
+                  </tr>
+                ))
+              ) : (
+                <tr><td colSpan="5">오답 데이터가 없습니다.</td></tr>
+              )}
+            </tbody>
+          </table>
 
-        {/* 난이도 분포 (Tier 기반) */}
-        <div className="db-widget-box">
-          <h4>난이도 분포</h4>
-          <div className="db-chart-space">
-            {difficultyData.length > 0 ? (
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie 
-                    data={difficultyData} 
-                    dataKey="value" 
-                    outerRadius="85%" 
-                    innerRadius="55%"
-                    paddingAngle={5}
-                  >
-                    {difficultyData.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
-                  </Pie>
-                  <Tooltip />
-                </PieChart>
-              </ResponsiveContainer>
-            ) : <p className="chart-no-data">데이터가 없습니다.</p>}
+          <div className="pagination">
+            <span>&lt;&lt; 1, 2, 3, 4, 5 &gt;&gt;</span>
           </div>
         </div>
-
-        {/* 언어 통계 */}
-        <div className="db-widget-box">
-          <h4>언어 통계</h4>
-          <div className="db-chart-space">
-            {languageData.length > 0 ? (
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={languageData} layout="vertical">
-                  <XAxis type="number" hide />
-                  <YAxis dataKey="name" type="category" width={80} tickLine={false} axisLine={false} />
-                  <Tooltip cursor={{fill: 'transparent'}}/>
-                  <Bar dataKey="problems" fill="#222" barSize={12} radius={[0, 10, 10, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            ) : <p className="chart-no-data">데이터가 없습니다.</p>}
-          </div>
-        </div>
-      </section>
+      </main>
     </div>
   );
 };
 
-export default MainDashboard;
+export default IncorrectNote;
