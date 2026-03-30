@@ -508,20 +508,33 @@ router
     try{
         const userId = req.user.id;
         conn = await pool.getConnection();
+
+        // 1. 유저 정보 조회 (대괄호 없이 결과 전체를 받습니다)
+        const userResult = await conn.query("SELECT nickname FROM usertbl WHERE id = ?", [userId]);
         
-        // p.review(오답 이유)까지 포함해서 가져옴
+        // ⭐️ 안전하게 닉네임 추출 (결과가 있으면 그 안의 nickname을, 없으면 "사용자")
+        const nickname = (userResult && userResult.length > 0) ? userResult[0].nickname : "사용자";
+
+        // 2. 오답 데이터 조회
         const sql = `
-            SELECT p.id, p.problem_id, c.title, c.tier, p.status, p.use_language, p.review, p.updated_at 
+            SELECT p.id, p.problem_id, c.title, c.tier, p.created_at 
             FROM problemtbl p 
             JOIN problem_cachetbl c ON p.problem_id = c.problem_id 
             WHERE p.user_id = ? AND p.status = 'FAIL' 
-            ORDER BY p.updated_at DESC
+            ORDER BY p.created_at DESC
         `;
         const rows = await conn.query(sql, [userId]);
-        
-        res.status(200).json({ 
+
+        // ⭐️ 여기서 rows가 undefined일 경우를 대비해 빈 배열[]로 초기화
+        const finalRows = rows || [];
+
+        console.log(`✅ [Incorrect] User: ${nickname}, 오답: ${finalRows.length}개`);
+
+        return res.status(200).json({ 
             success: true, 
-            data: rows });
+            data: finalRows, 
+            user: { nickname } 
+        });
 
     } catch(err) {
         console.error(`오답노트 정보 수신 중 오류 발생 : ${err}`);
