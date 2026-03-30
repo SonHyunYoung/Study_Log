@@ -508,14 +508,12 @@ router
     try{
         const userId = req.user.id;
         conn = await pool.getConnection();
-
-        // 1. 유저 정보 조회 (대괄호 없이 결과 전체를 받습니다)
-        const userResult = await conn.query("SELECT nickname FROM usertbl WHERE id = ?", [userId]);
         
-        // ⭐️ 안전하게 닉네임 추출 (결과가 있으면 그 안의 nickname을, 없으면 "사용자")
-        const nickname = (userResult && userResult.length > 0) ? userResult[0].nickname : "사용자";
+        // 1. 유저 닉네임 조회 (usertbl)
+        const [userRows] = await conn.query("SELECT nickname FROM usertbl WHERE id = ?", [userId]);
+        const nickname = (userRows && userRows.length > 0) ? userRows[0].nickname : "사용자";
 
-        // 2. 오답 데이터 조회
+        // 2. 오답 데이터 조회 (p.status = 'FAIL' 조건 추가)
         const sql = `
             SELECT p.id, p.problem_id, c.title, c.tier, p.created_at 
             FROM problemtbl p 
@@ -523,16 +521,14 @@ router
             WHERE p.user_id = ? AND p.status = 'FAIL' 
             ORDER BY p.created_at DESC
         `;
-        const rows = await conn.query(sql, [userId]);
+        const [rows] = await conn.query(sql, [userId]);
+        
+        console.log(`[Incorrect] User: ${nickname}, 오답: ${rows.length}개`);
 
-        // ⭐️ 여기서 rows가 undefined일 경우를 대비해 빈 배열[]로 초기화
-        const finalRows = rows || [];
-
-        console.log(`✅ [Incorrect] User: ${nickname}, 오답: ${finalRows.length}개`);
-
+        // 3. 최종 응답 (MainDashboard와 동일한 규격)
         return res.status(200).json({ 
             success: true, 
-            data: finalRows, 
+            data: rows,      // 오답 목록
             user: { nickname } 
         });
 
