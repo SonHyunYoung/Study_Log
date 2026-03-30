@@ -19,6 +19,8 @@ router.get("/", (req, res) => {
 //로그인, 로그아웃
 router.
 post("/login", async (req, res) => { //로그인
+    console.log("프론트에서 보낸 데이터:", req.body);
+
     let conn;
     try {
         const { email, password } = req.body;
@@ -76,6 +78,49 @@ post("/login", async (req, res) => { //로그인
     res.status(200).json({
         message : `로그아웃에 성공했습니다.`
     });
+});
+
+//token에서 유저 정보 가져오기
+router
+.get("/user/profile", async (req, res) => {
+    let conn;
+    try {
+        // 1. 헤더에서 토큰 추출
+        const authHeader = req.headers.authorization;
+        const token = authHeader && authHeader.split(' ')[1];
+
+        if (!token) return res.status(401).json({ message: "토큰이 없습니다." });
+
+        // 2. 토큰 검증
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        
+        conn = await pool.getConnection();
+
+        // 3. DB에서 최신 유저 정보 조회 (닉네임 등)
+        const [rows] = await conn.query(
+            "SELECT id, email, nickname FROM usertbl WHERE id = ?", 
+            [decoded.id]
+        );
+
+        if (rows.length === 0) {
+            return res.status(404).json({ message: "유저를 찾을 수 없습니다." });
+        }
+
+        const user = rows[0];
+        res.status(200).json({
+            success: true,
+            user: {
+                nickname: user.nickname,
+                email: user.email
+            }
+        });
+
+    } catch (err) {
+        console.error("프로필 조회 실패:", err);
+        res.status(403).json({ message: "유효하지 않은 토큰입니다." });
+    } finally {
+        if (conn) conn.release();
+    }
 });
 
 //회원가입, 중복확인, 회원탈퇴
