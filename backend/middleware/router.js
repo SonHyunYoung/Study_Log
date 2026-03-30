@@ -20,7 +20,7 @@ router.get("/", (req, res) => {
 router.
 post("/login", async (req, res) => { //로그인
     let conn;
-    
+
     try {
         const { email, password } = req.body;
 
@@ -301,45 +301,162 @@ router
         }
     }
 })
+
 //게시물 crud
 router
-.post("/problems", authmiddleware, async(req, res) => { //게시물 등록
-    const { problem_id, title, tier, status, memo } = req.body;
-    const user_id = req.user.id; // 토큰에서 추출
+.get("/problem", authmiddleware, async(req, res) => {
+    let conn;
+
+    try{
+        const userId = req.user.id;
+        conn = await pool.getConnection();
+        
+        const sql = `
+            SELECT p.id, p.problem_id, c.title, c.tier, p.status, p.created_at 
+            FROM problemtbl p 
+            JOIN problem_cachetbl c ON p.problem_id = c.problem_id 
+            WHERE p.user_id = ? 
+            ORDER BY p.created_at DESC
+        `;
+       
+        const rows = await conn.query(sql, [userId]);
+        
+        res.status(200).json({ 
+            success: true, 
+            data: rows });
+
+    } catch(err) {
+        console.error(`게시물 조회 중 오류 발생 : ${err}`);
+
+        res.status(500).json({
+            err_message : "서버 오류가 발생했습니다."
+        });
+    } finally {
+        if(conn) { //db 연결 해제
+            conn.release();
+        }
+    }
+})
+.post("/problem/upload", authmiddleware, async(req, res) => {
+    
+    const { problem_id, title, tier, status, use_language } = req.body;
+    const userId = req.user.id;
 
     let conn;
-    try {
-        if (!problem_id || !status) return res.status(400).json({ message: "필수 데이터 부족" });
 
+    try{
         conn = await pool.getConnection();
+        await conn.beginTransaction();
 
-        // 문제 정보가 없으면 캐시에 먼저 등록 
+        // 캐시 테이블 (IGNORE로 중복 방지)
         await conn.query(
-            "INSERT IGNORE INTO problem_cachetbl (id, title, tier) VALUES (?, ?, ?)",
-            [problem_id, title, tier || 0]
+            "INSERT IGNORE INTO problem_cachetbl (problem_id, title, tier) VALUES (?, ?, ?)",
+            [problem_id, title, tier]
         );
 
-        //실제 유저의 풀이 기록 저장
+        // 유저별 문제 기록
         await conn.query(
-            "INSERT INTO problemtbl (user_id, problem_id, status, memo) VALUES (?, ?, ?, ?)",
-            [user_id, problem_id, status, memo || ""]
+            "INSERT INTO problemtbl (user_id, problem_id, status, use_language) VALUES (?, ?, ?, ?)",
+            [userId, problem_id, status, use_language]
         );
 
-        res.status(201).json({ success: true, message: "기록이 등록되었습니다." });
+        await conn.commit();
+        res.status(201).json({ 
+            success: true, 
+            message: "등록 완료" });
 
-    } catch (err) {
-        res.status(500).json({ message: "등록 실패", error: err.message });
-    } finally { if (conn) conn.release(); }
+    } catch(err) {
+        console.error(`게시물 조회 중 오류 발생 : ${err}`);
+
+        res.status(500).json({
+            err_message : "서버 오류가 발생했습니다."
+        });
+    } finally {
+        if(conn) { //db 연결 해제
+            conn.release();
+        }
+    }
 })
-.get("/problems/lookup", authmiddleware, async(req, res) => { //게시물 조회
+.put("/problem/update/:id", authmiddleware, async(req, res) => {
+    
+    const { id } = req.params;
+    const { status, use_language } = req.body; // 수정할 데이터들
+    const userId = req.user.id;
 
+    let conn;
+
+    try{
+        conn = await pool.getConnection();
+        
+        const sql = `
+            UPDATE problemtbl 
+            SET status = ?, use_language = ?, updated_at = NOW() 
+            WHERE id = ? AND user_id = ?
+        `;
+        
+        const result = await conn.query(sql, [status, use_language, id, userId]);
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ 
+                success: false, 
+                message: "수정할 대상을 찾을 수 없거나 권한이 없습니다." });
+        }
+
+        res.status(200).json({ 
+            success: true, 
+            message: "수정을 성공하였습니다." });
+
+    } catch(err) {
+        console.error(`게시물 조회 중 오류 발생 : ${err}`);
+
+        res.status(500).json({
+            err_message : "서버 오류가 발생했습니다."
+        });
+    } finally {
+        if(conn) { //db 연결 해제
+            conn.release();
+        }
+    }
 })
-.put("/problems/update", authmiddleware, async(req, res) => { //게시물 수정
+.delete("/problem/delete/:id", authmiddleware, async(req, res) => {
+    
+    const { id } = req.params;
+    const userId = req.user.id;
+    
+    let conn;
 
-})
-.delete("/problems/delete", authmiddleware, async(req, res) => { //게시물 삭제
+    try{
+        conn = await pool.getConnection();
+        
+        // mariadb 모듈의 삭제 결과 확인
+        const result = await conn.query(
+            "DELETE FROM problemtbl WHERE id = ? AND user_id = ?", 
+            [id, userId]
+        );
 
+        // affectedRows로 삭제 여부 확인
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ 
+                success: false, 
+                message: "삭제 대상을 찾을 수 없습니다." });
+        }
+        res.status(200).json({ 
+            success: true, 
+            message: "삭제 성공" });
+
+    } catch(err) {
+        console.error(`게시물 조회 중 오류 발생 : ${err}`);
+
+        res.status(500).json({
+            err_message : "서버 오류가 발생했습니다."
+        });
+    } finally {
+        if(conn) { //db 연결 해제
+            conn.release();
+        }
+    }
 });
+
 //오답노트 crud
 router
 .post("/problems/wrong", authmiddleware, async(req, res) => {
@@ -351,6 +468,5 @@ router
 .delete("/problems/wrong/sloved", authmiddleware, async(req, res) => {
 });
 
-//메인화면 
 
 module.exports = router; //router 모듈 내보내기
