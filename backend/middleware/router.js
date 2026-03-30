@@ -341,10 +341,8 @@ router
         `;
         const rows = await conn.query(sql, [userId]);
 
-        // ⭐️ 터미널에 이게 찍히는지 보세요!
         console.log(`[BACKEND] 데이터 조회 완료: ${rows.length}건`);
 
-        // ⭐️ 응답을 '반드시' 보냅니다.
         return res.status(200).json({ 
             success: true, 
             data: Array.isArray(rows) ? rows : [rows], // 배열 보장
@@ -368,7 +366,7 @@ router
     const { problem_id, title, tier, status, use_language } = req.body;
     const userId = req.user.id;
 
-    let conn;
+    let conn; 
 
     try{
         conn = await pool.getConnection();
@@ -386,7 +384,7 @@ router
             title = cacheCheck[0].title;
             tier = cacheCheck[0].tier;
         } else {
-            // 1-2. 캐시에 없으면 solved.ac API 호출
+            // 캐시에 없으면 solved.ac API 호출
             const response = await axios.get(`https://solved.ac/api/v3/problem/show?problemId=${problem_id}`);
             title = response.data.titleKo;
             tier = getSimpleTier(response.data.level); // 상/중/하 매핑
@@ -397,7 +395,7 @@ router
             );
         }
 
-        // 1-3. 유저 기록 저장
+        // 유저 기록 저장
         await conn.query(
             "INSERT INTO problemtbl (user_id, problem_id, status, use_language, review) VALUES (?, ?, ?, ?, ?)",
             [userId, problem_id, status, use_language, review || null]
