@@ -17,6 +17,8 @@ const authMiddleware = (req, res, next) => { //인증 미들웨어
 
         req.user = decode; 
 
+        next();
+
     } catch (err) {
         res.status(403).json({
             message : "유효하지 않은 토큰입니다."

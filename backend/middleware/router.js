@@ -322,9 +322,16 @@ router
     let conn;
 
     try{
-        const userId = req.user.id;
+       const userId = req.user.id;
         conn = await pool.getConnection();
-        
+
+        // 1. 유저 정보 (테이블명 usertbl로 수정!)
+        const userRows = await conn.query("SELECT nickname FROM usertbl WHERE id = ?", [userId]);
+        // MariaDB 드라이버는 결과가 바로 배열일 수 있으므로 체크
+        const nickname = (userRows && userRows.length > 0) ? 
+                         (userRows[0].nickname || userRows[0][0]?.nickname) : "사용자";
+
+        // 2. 게시물 데이터
         const sql = `
             SELECT p.id, p.problem_id, c.title, c.tier, p.status, p.created_at 
             FROM problemtbl p 
@@ -332,12 +339,17 @@ router
             WHERE p.user_id = ? 
             ORDER BY p.created_at DESC
         `;
-       
         const rows = await conn.query(sql, [userId]);
-        
-        res.status(200).json({ 
+
+        // ⭐️ 터미널에 이게 찍히는지 보세요!
+        console.log(`[BACKEND] 데이터 조회 완료: ${rows.length}건`);
+
+        // ⭐️ 응답을 '반드시' 보냅니다.
+        return res.status(200).json({ 
             success: true, 
-            data: rows });
+            data: Array.isArray(rows) ? rows : [rows], // 배열 보장
+            user: { nickname }
+        });
 
     } catch(err) {
         console.error(`게시물 조회 중 오류 발생 : ${err}`);
