@@ -364,15 +364,33 @@ body, html, #root { width: 100%; height: 100%; font-family: 'Pretendard', sans-s
   margin-bottom: 15px;
 }
 
+/* 요약 카드 전체 레이아웃 */
 .db-summary-card {
-  background: #ffffff;
-  border: 1px solid #eef0f2;
-  border-radius: 25px; /* 컨텐츠 박스 라운딩 적용 */
   display: flex;
-  padding: 3rem 2rem;
-  justify-content: space-around;
+  justify-content: space-around; /* 4개일 땐 around가 균형미가 좋습니다 */
   align-items: center;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.04); /* 부드러운 그림자 */
+  background: #fff;
+  padding: 25px 20px;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+}
+
+/* 수치별 의미 있는 컬러 부여 */
+.val-total { color: #2c3e50; }     /* 전체: 차분한 다크블루 */
+.val-correct { color: #2ecc71; }   /* 정답: 신뢰의 초록색 */
+.val-remaining { color: #e74c3c; } /* 오답: 경각심의 빨간색 */
+.val-resolved { color: #3498db; }  /* 복습: 성장의 파란색 ⭐️ */
+
+.db-summary-label {
+  font-size: 13px;
+  color: #95a5a6;
+  margin-bottom: 6px;
+  font-weight: 700;
+}
+
+.db-summary-value {
+  font-size: 32px;
+  font-weight: 800;
 }
 
 .db-summary-unit {
