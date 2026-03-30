@@ -228,7 +228,7 @@ body, html, #root { width: 100%; height: 100%; font-family: 'Pretendard', sans-s
   cursor: pointer;
 }
 
-/* ⭐️ 에러 문구 전용 스타일 */
+/* 에러 문구 전용 스타일 */
 .error-text-only {
   color: #ff4d4d;
   font-size: 0.95rem;
@@ -255,7 +255,31 @@ body, html, #root { width: 100%; height: 100%; font-family: 'Pretendard', sans-s
   margin-top: 5px;
 }
 
-/* ⭐️ 하단 링크 (로그인 페이지와 동일) */
+/* 하단 링크 (로그인 페이지와 동일) */
 .bottom-link { margin-top: 30px; text-align: center; font-size: 0.95rem; color: #777; }
 .bottom-link a { color: #0239a8; text-decoration: none; transition: all 0.2s; }
 .bottom-link a:hover { color: #011e5a; font-weight: bold; text-decoration: underline; }
+
+/* 반응형: 화면 너비가 850px보다 작아지면 실행 */
+@media (max-width: 850px) {
+  .split-container { 
+    flex-direction: column; /* 좌우 배치를 위아래 배치로 변경 */
+    overflow-y: auto;       /* 세로 스크롤 허용 */
+  }
+  
+  .split-left, .split-right { 
+    flex: none; 
+    width: 100%;            /* 가로를 꽉 채우게 변경 */
+    padding: 40px 20px;     /* 여백 조정 */
+  }
+
+  /* 왼쪽 Join Us 글자 크기도 모바일에 맞게 축소 */
+  .large-join, .super-large-join { 
+    font-size: 3rem; 
+    text-align: center;
+  }
+  
+  .brand-message {
+    text-align: center;     /* 문구 중앙 정렬 */
+  }
+}

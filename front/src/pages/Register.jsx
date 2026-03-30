@@ -76,7 +76,7 @@ const Register = () => {
 
     setIsLoading(true);
     try {
-      // ⭐️ 백엔드 변수명(confirmpassword)에 맞춰 전송
+      // 백엔드 변수명(confirmpassword)에 맞춰 전송
       const response = await axios.post('http://localhost:3000/register', { 
         email, 
         name, 
@@ -132,22 +132,35 @@ const Register = () => {
 
             <div className="form-group">
               <label className="form-label"><span className="required">*</span> 이름</label>
-              <input type="text" className="form-input" value={name} onChange={(e) => setName(e.target.value)} />
+              <input 
+                type="text" 
+                className="form-input" 
+                value={name} onChange={(e) => setName(e.target.value)}
+                placeholder = "2자 이상 ~ 15자 이하" />
             </div>
 
             <div className="form-group">
               <label className="form-label"><span className="required">*</span> 비밀번호</label>
-              <input type="password" className="form-input" value={password} onChange={(e) => setPassword(e.target.value)} />
+              <input 
+                type="password" 
+                className="form-input" 
+                value={password} onChange={(e) => setPassword(e.target.value)} 
+                placeholder='대소문자와 특수문자 포함 필수 8자 이상 입력'/>
               {passwordMsg && <p className={`status-msg ${isPasswordSecure ? 'success' : 'error'}`}>{passwordMsg}</p>}
             </div>
 
             <div className="form-group">
               <label className="form-label"><span className="required">*</span> 비밀번호 확인</label>
-              <input type="password" className="form-input" value={passwordConfirm} onChange={(e) => setPasswordConfirm(e.target.value)} />
+              <input 
+                type="password" 
+                className="form-input" 
+                value={passwordConfirm} 
+                onChange={(e) => setPasswordConfirm(e.target.value)}
+                placeholder='비밀번호 재입력' />
               {confirmMsg && <p className={`status-msg ${isPasswordMatched ? 'success' : 'error'}`}>{confirmMsg}</p>}
             </div>
 
-            {/* ⭐️ 빨간 글씨 에러 메시지 */}
+            {/* 빨간 글씨 에러 메시지 */}
             {error && <div className="error-text-only">{error}</div>}
 
             <button type="submit" className="main-submit-btn" disabled={isLoading}>
