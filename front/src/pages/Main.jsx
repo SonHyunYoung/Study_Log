@@ -88,7 +88,7 @@ const MainDashboard = () => {
       <section className="db-summary-section">
         <div className="db-summary-card">
           <div className="db-summary-unit">
-            <p className="db-summary-label">푼 문제 수</p>
+            <p className="db-summary-label">풀이한 문제</p>
             <h3 className="db-summary-value val-total">{summary.total}</h3>
           </div>
           <div className="db-summary-v-divider"></div>
@@ -115,7 +115,7 @@ const MainDashboard = () => {
                 <li key={item.id || idx}>{idx + 1}. {item.title}</li>
               ))
             ) : (
-              <li className="no-data-item">복습할 문제가 없습니다! 👏</li>
+              <li className="no-data-item">복습할 문제가 없습니다.</li>
             )}
           </ul>
         </div>

@@ -8,7 +8,7 @@ const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState(''); 
-  const nevigate = useNavigate();
+  const navigate = useNavigate();
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -24,9 +24,10 @@ const Login = () => {
         // 1. 유저 정보나 토큰이 있다면 저장 (옵션)
         localStorage.setItem('isLoggedIn', 'true');
         localStorage.setItem('nickname', response.data.nickname); 
+        localStorage.setItem('token', response.data.token);
       
         // 2. 대시보드로 이동
-        nevigate('/main');
+        navigate('/main');
       }
     } catch (err) {
       // 서버 에러 메시지 반영

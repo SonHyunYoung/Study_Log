@@ -283,59 +283,124 @@ body, html, #root { width: 100%; height: 100%; font-family: 'Pretendard', sans-s
     text-align: center;     /* 문구 중앙 정렬 */
   }
 }
-/* --- Dashboard Styles (Hybrid: Sharp Nav + Round Content) --- */
+/* --- Global Styles --- */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
+}
 
 .db-container {
-  background-color: #f8f9fa;
+  background-color: #f4f6f8; /* 배경을 약간 더 차분하게 */
   min-height: 100vh;
 }
 
-/* 1. 네비게이션 바: 직선 유지 & 비율 확대 */
+/* --- 1. 네비게이션 바 (Sharp & Large) --- */
 .db-header-dark {
-  background-color: #222;
-  color: #fff;
+  background-color: #1a1a1a;
+  color: #ffffff;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 2rem 5rem; 
-  border-radius: 0; /* 네비바는 직선 유지 */
+  padding: 2.2rem 5rem; /* 네비바 비율 확대 */
+  border-radius: 0;      /* 라운딩 제거 (직선형) */
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
 }
 
-/* 2. 요약 섹션: 라운딩 적용 및 스탯 스타일링 */
-.db-summary-section { padding: 3rem 5rem 1rem; }
-.db-summary-card {
-  background: #fff;
-  border: 1px solid #e1e4e8; /* 선을 얇고 부드럽게 변경 */
-  box-shadow: 0 4px 12px rgba(0,0,0,0.05); /* 입체감 추가 */
-  border-radius: 25px; /* 박스 라운딩 적용 */
+.db-logo {
+  font-size: 1.8rem;
+  font-weight: 900;
+  cursor: pointer;
+  letter-spacing: -0.5px;
+}
+
+.db-nav-center {
   display: flex;
-  padding: 3rem;
+  gap: 3.5rem;
+}
+
+.db-nav-link {
+  font-size: 1.1rem;
+  cursor: pointer;
+  opacity: 0.6;
+  transition: all 0.3s ease;
+  padding: 0.5rem 0;
+}
+
+.db-nav-link:hover {
+  opacity: 1;
+}
+
+.db-nav-link.active {
+  opacity: 1;
+  font-weight: 800;
+  border-bottom: 3px solid #ffffff; /* 밑줄 강조 */
+}
+
+.db-user-info {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  font-size: 1rem;
+}
+
+.db-logout-text {
+  cursor: pointer;
+  opacity: 0.7;
+  font-size: 0.9rem;
+  text-decoration: underline;
+}
+
+.db-logout-text:hover {
+  opacity: 1;
+}
+
+/* --- 2. 요약 통계 카드 (Round & Styled) --- */
+.db-summary-section {
+  padding: 3.5rem 5rem 1.5rem;
+}
+
+.db-summary-card {
+  background: #ffffff;
+  border: 1px solid #eef0f2;
+  border-radius: 25px; /* 컨텐츠 박스 라운딩 적용 */
+  display: flex;
+  padding: 3rem 2rem;
   justify-content: space-around;
   align-items: center;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.04); /* 부드러운 그림자 */
 }
 
-.db-summary-unit { text-align: center; }
-.db-summary-label { 
-  font-size: 1rem; 
-  color: #666; 
-  margin-bottom: 0.8rem; 
+.db-summary-unit {
+  text-align: center;
+  flex: 1;
+}
+
+.db-summary-label {
+  font-size: 1.1rem;
+  color: #666;
+  margin-bottom: 0.8rem;
   font-weight: 600;
 }
 
-.db-summary-value { 
-  font-size: 2.5rem; 
-  font-weight: 900; 
-  margin: 0;
+.db-summary-value {
+  font-size: 3rem;
+  font-weight: 900;
 }
 
-/* 스탯별 개별 컬러 적용 */
-.val-total { color: #222; }      /* 전체: 블랙 */
-.val-correct { color: #2ecc71; }    /* 정답: 산뜻한 그린 */
-.val-incorrect { color: #e74c3c; }  /* 오답: 경고 레드 */
+/* 통계 수치 개별 컬러 */
+.val-total { color: #1a1a1a; }    /* 푼 문제 수: 블랙 */
+.val-correct { color: #2ecc71; }  /* 정답: 그린 */
+.val-incorrect { color: #e74c3c; }/* 오답: 레드 */
 
-.db-summary-v-divider { width: 1px; height: 60px; background-color: #eee; }
+.db-summary-v-divider {
+  width: 1px;
+  height: 70px;
+  background-color: #eee;
+}
 
-/* 3. 위젯 박스: 라운딩 적용 */
+/* --- 3. 위젯 그리드 (Round) --- */
 .db-widget-container {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -344,27 +409,125 @@ body, html, #root { width: 100%; height: 100%; font-family: 'Pretendard', sans-s
 }
 
 .db-widget-box {
-  background: #fff;
-  border: 1px solid #e1e4e8;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-  border-radius: 25px; /* 박스 라운딩 적용 */
+  background: #ffffff;
+  border: 1px solid #eef0f2;
+  border-radius: 25px; /* 위젯 박스 라운딩 적용 */
   padding: 2.5rem;
-  min-height: 350px;
+  min-height: 380px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.04);
 }
 
 .db-widget-box h4 {
-  font-size: 1.2rem;
+  font-size: 1.3rem;
   font-weight: 800;
-  margin-bottom: 1.5rem;
-  color: #333;
+  margin-bottom: 2rem;
+  color: #1a1a1a;
+  border-left: 5px solid #1a1a1a;
+  padding-left: 12px;
 }
 
-/* 리스트 디자인 */
-.db-review-list li {
-  padding: 12px 15px;
-  background-color: #f9f9f9;
-  border-radius: 12px; /* 리스트 아이템도 둥글게 */
-  margin-bottom: 10px;
-  font-weight: 600;
+/* --- 4. 내부 요소 스타일 --- */
+.db-review-list {
   list-style: none;
+}
+
+.db-review-list li {
+  padding: 15px 20px;
+  background-color: #f9fafb;
+  border-radius: 15px; /* 리스트 아이템도 라운딩 */
+  margin-bottom: 12px;
+  font-weight: 600;
+  color: #333;
+  border: 1px solid #f0f2f5;
+  transition: transform 0.2s;
+}
+
+.db-review-list li:hover {
+  transform: translateX(5px);
+  background-color: #f1f3f5;
+}
+
+.db-chart-space {
+  height: 250px;
+  width: 100%;
+}
+
+.db-loading-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #666;
+}
+
+/* 데이터 없음 텍스트 */
+.chart-no-data, .no-data-item {
+  text-align: center;
+  color: #999;
+  margin-top: 50px;
+  font-weight: 500;
+}
+
+/* --- Media Queries (반응형 디자인) --- */
+
+/* 1. 태블릿 & 작은 노트북 (1024px 이하) */
+@media (max-width: 1024px) {
+  .db-header-dark, 
+  .db-summary-section, 
+  .db-widget-container {
+    padding-left: 2rem;
+    padding-right: 2rem;
+  }
+
+  .db-widget-container {
+    grid-template-columns: repeat(2, 1fr); /* 3열 -> 2열로 변경 */
+  }
+}
+
+/* 2. 모바일 (768px 이하) */
+@media (max-width: 768px) {
+  /* 네비게이션 바: 세로 배치 또는 줄바꿈 */
+  .db-header-dark {
+    flex-direction: column;
+    gap: 1.5rem;
+    padding: 1.5rem;
+    text-align: center;
+  }
+
+  .db-nav-center {
+    gap: 1.5rem;
+    font-size: 0.9rem;
+  }
+
+  /* 요약 통계: 가로 -> 세로 배치 */
+  .db-summary-card {
+    flex-direction: column;
+    gap: 2rem;
+    padding: 2rem;
+  }
+
+  .db-summary-v-divider {
+    width: 80%; /* 가로 구분선으로 변경 */
+    height: 1px;
+  }
+
+  .db-summary-value {
+    font-size: 2.2rem; /* 글자 크기 축소 */
+  }
+
+  /* 위젯 그리드: 2열 -> 1열(세로)로 변경 */
+  .db-widget-container {
+    grid-template-columns: 1fr;
+    padding-bottom: 3rem;
+  }
+
+  .db-widget-box {
+    min-height: auto; /* 높이 고정 해제 */
+  }
+
+  .db-chart-space {
+    height: 200px; /* 차트 높이 약간 축소 */
+  }
 }
