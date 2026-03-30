@@ -2,6 +2,8 @@ require('dotenv').config();
 
 const express = require("express");
 
+const axios = require('axios'); //axios로 sloved.ac 모듈 호출
+
 const router = express.Router(); //router 객체 생성
 const pool = require("../maria"); //db 연결 풀
 
@@ -302,6 +304,18 @@ router
     }
 })
 
+//게시물 데이터 전처리
+/*
+  solved.ac 레벨을 상/중/하로 변환
+  하: Bronze (1~5) | 중: Silver (6~10) | 상: Gold 이상 (11~31)
+ */
+const getSimpleTier = (level) => {
+    if (level === 0) return 'Unrated';
+    if (level <= 5) return '하'; 
+    if (level <= 10) return '중';
+    return '상'; 
+};
+
 //게시물 crud
 router
 .get("/problem", authmiddleware, async(req, res) => {
@@ -348,22 +362,39 @@ router
         conn = await pool.getConnection();
         await conn.beginTransaction();
 
-        // 캐시 테이블 (IGNORE로 중복 방지)
-        await conn.query(
-            "INSERT IGNORE INTO problem_cachetbl (problem_id, title, tier) VALUES (?, ?, ?)",
-            [problem_id, title, tier]
+        // 1-1. 캐시 테이블 확인
+        const cacheCheck = await conn.query(
+            "SELECT title, tier FROM problem_cachetbl WHERE problem_id = ?", 
+            [problem_id]
         );
 
-        // 유저별 문제 기록
+        let title, tier;
+
+        if (cacheCheck.length > 0) {
+            title = cacheCheck[0].title;
+            tier = cacheCheck[0].tier;
+        } else {
+            // 1-2. 캐시에 없으면 solved.ac API 호출
+            const response = await axios.get(`https://solved.ac/api/v3/problem/show?problemId=${problem_id}`);
+            title = response.data.titleKo;
+            tier = getSimpleTier(response.data.level); // 상/중/하 매핑
+
+            await conn.query(
+                "INSERT INTO problem_cachetbl (problem_id, title, tier) VALUES (?, ?, ?)",
+                [problem_id, title, tier]
+            );
+        }
+
+        // 1-3. 유저 기록 저장
         await conn.query(
-            "INSERT INTO problemtbl (user_id, problem_id, status, use_language) VALUES (?, ?, ?, ?)",
-            [userId, problem_id, status, use_language]
+            "INSERT INTO problemtbl (user_id, problem_id, status, use_language, review) VALUES (?, ?, ?, ?, ?)",
+            [userId, problem_id, status, use_language, review || null]
         );
 
         await conn.commit();
         res.status(201).json({ 
             success: true, 
-            message: "등록 완료" });
+            message: "등록 완료", data: { title, tier } });
 
     } catch(err) {
         console.error(`게시물 조회 중 오류 발생 : ${err}`);
@@ -459,14 +490,116 @@ router
 
 //오답노트 crud
 router
-.post("/problems/wrong", authmiddleware, async(req, res) => {
+.get("/incorrect", authmiddleware, async(req, res) => {
+    let conn;
+
+    try{
+        const userId = req.user.id;
+        conn = await pool.getConnection();
+        
+        // p.review(오답 이유)까지 포함해서 가져옴
+        const sql = `
+            SELECT p.id, p.problem_id, c.title, c.tier, p.status, p.use_language, p.review, p.updated_at 
+            FROM problemtbl p 
+            JOIN problem_cachetbl c ON p.problem_id = c.problem_id 
+            WHERE p.user_id = ? AND p.status = 'FAIL' 
+            ORDER BY p.updated_at DESC
+        `;
+        const rows = await conn.query(sql, [userId]);
+        
+        res.status(200).json({ 
+            success: true, 
+            data: rows });
+
+    } catch(err) {
+        console.error(`오답노트 정보 수신 중 오류 발생 : ${err}`);
+        
+        res.status(500).json({
+            err_message : "서버 오류가 발생하였습니다."
+        });
+
+    } finally {
+
+        if(conn){
+            conn.release();
+        }
+    }
 })
-.get("/problems/wrong/lookup", authmiddleware, async(req, res) => {
+.put("/incorrect/update/:id", authmiddleware, async(req, res) => {
+    
+    const { id } = req.params;
+    const { review, status } = req.body; // review(오답 이유), status(재풀이 성공 시 SUCCESS로 변경 가능)
+    const userId = req.user.id;
+    
+    let conn;
+
+    try{
+        conn = await pool.getConnection();
+        
+        // review 내용과 status를 동시에 업데이트할 수 있게 구성
+        const sql = `
+            UPDATE problemtbl 
+            SET review = ?, status = ?, updated_at = NOW() 
+            WHERE id = ? AND user_id = ?
+        `;
+
+        const result = await conn.query(sql, [review, status || 'FAIL', id, userId]);
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ 
+                success: false, 
+                message: "수정할 대상을 찾을 수 없습니다." });
+        }
+        res.status(200).json({
+             success: true, 
+             message: "오답 노트가 업데이트되었습니다!" });  
+
+    } catch(err) {
+        console.error(`오답노트 업데이트 실패 : ${err}`);
+
+        res.status(500).json({
+            err_message : "서버 오류가 발생하였습니다."
+        });
+
+    } finally {
+        if(conn) {
+            conn.release();
+        }
+    }
 })
-.put("/problems/wrong/update", authmiddleware, async(req, res) => {
+.delete("/incorrect/delete/:id", authmiddleware, async(req, res) => {
+    const { id } = req.params;
+    const userId = req.user.id;
+    
+    let conn;
+
+    try{
+        conn = await pool.getConnection();
+        const result = await conn.query("DELETE FROM problemtbl WHERE id = ? AND user_id = ?", [id, userId]);
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ 
+                success: false, 
+                message: "삭제할 대상을 찾을 수 없습니다." });
+        }
+
+        res.status(200).json({
+             success: true, 
+             message: "기록이 삭제되었습니다." });
+             
+    } catch (err) {
+        console.error(`오답노트 삭제 실패 : ${err}`);
+
+        res.status(500).json({
+            err_message : "서버 오류가 발생하였습니다."
+        });
+
+    } finally {
+        if(conn) {
+            conn.release();
+        }
+    }
 })
-.delete("/problems/wrong/sloved", authmiddleware, async(req, res) => {
-});
 
 
 module.exports = router; //router 모듈 내보내기
