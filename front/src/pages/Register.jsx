@@ -26,7 +26,7 @@ const Register = () => {
     const PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
     if (!password) { setPasswordMsg(''); setIsPasswordSecure(false); }
     else if (PASSWORD_REGEX.test(password)) { setPasswordMsg('안전한 비밀번호입니다.'); setIsPasswordSecure(true); }
-    else { setPasswordMsg('8자 이상, 대/소문자, 숫자, 특수문자 포함'); setIsPasswordSecure(false); }
+    else { setPasswordMsg('비밀번호의 보안성이 낮습니다.'); setIsPasswordSecure(false); }
   }, [password]);
 
   // 2. 비밀번호 일치 실시간 확인

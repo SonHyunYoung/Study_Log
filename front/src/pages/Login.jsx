@@ -39,7 +39,7 @@ const Login = () => {
     <div className="login-container">
       {/* 왼쪽 패널 */}
       <div className="left-panel">
-        <p>당신의 학습을 기록하는<br/>당신만의 기록 노트 Study LOG</p>
+        <p>당신의 학습을 기록하는<br/>당신만의 기록 노트 <br/>Study LOG</p>
       </div>
 
       {/* 오른쪽 패널 */}

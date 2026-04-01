@@ -8,7 +8,7 @@ const ProblemList = () => {
   const [dbData, setDbData] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // 1. 데이터 페칭 (MainDashboard와 동일한 '철벽' 로직)
+  // 1. 데이터 페칭
   useEffect(() => {
     const fetchProblems = async () => {
       try {
@@ -34,7 +34,6 @@ const ProblemList = () => {
           navigate('/login');
         }
       } finally {
-        // ⭐️ 어떤 에러가 나도 로딩은 꺼야 합니다.
         setLoading(false);
       }
     };

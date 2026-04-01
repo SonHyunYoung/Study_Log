@@ -574,7 +574,7 @@ body { font-family: 'Pretendard', sans-serif; background-color: #f4f7f9; color: 
 .db-nav-link.active, .db-nav-link:hover { color: #fff; }
 .db-user-info { display: flex; align-items: center; gap: 10px; }
 .db-nickname-text strong { color: #2ecc71; }
-.db-logout-text { cursor: pointer; color: #888; text-decoration: underline; font-size: 13px; }
+.db-logout-text { cursor: pointer; color: #f0f0f0; text-decoration: underline; font-size: 13px; }
 .db-divider-small { color: #444; }
 
 /* 본문 레이아웃 */
