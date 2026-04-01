@@ -504,14 +504,19 @@ router
     let conn;
 
     try{
-        const userId = req.user.id;
-        conn = await pool.getConnection();
         
-        // 1. 유저 닉네임 조회 (usertbl)
-        const [userRows] = await conn.query("SELECT nickname FROM usertbl WHERE id = ?", [userId]);
-        const nickname = (userRows && userRows.length > 0) ? userRows[0].nickname : "사용자";
+        if (!req.user || !req.user.id) {
+            return res.status(401).json({ success: false, message: "인증 정보가 유효하지 않습니다." });
+        }
 
-        // 2. 오답 데이터 조회 (p.status = 'FAIL' 조건 추가)
+        const userId = req.user.id; 
+        conn = await pool.getConnection();
+
+        // 2. 닉네임 가져오기 (usertbl!)
+        const [userRows] = await conn.query("SELECT nickname FROM usertbl WHERE id = ?", [userId]);
+        const nickname = userRows ? userRows.nickname : "사용자";
+
+        // 3. 오답 데이터 조회
         const sql = `
             SELECT p.id, p.problem_id, c.title, c.tier, p.created_at 
             FROM problemtbl p 
@@ -520,13 +525,11 @@ router
             ORDER BY p.created_at DESC
         `;
         const [rows] = await conn.query(sql, [userId]);
-        
-        console.log(`[Incorrect] User: ${nickname}, 오답: ${rows.length}개`);
 
-        // 3. 최종 응답 (MainDashboard와 동일한 규격)
-        return res.status(200).json({ 
+        // 닉네임과 데이터를 'user' 객체에 담아 전송
+        res.status(200).json({ 
             success: true, 
-            data: rows,      // 오답 목록
+            data: rows,
             user: { nickname } 
         });
 
