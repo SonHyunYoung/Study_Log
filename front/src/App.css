@@ -577,47 +577,94 @@ body { font-family: 'Pretendard', sans-serif; background-color: #f4f7f9; color: 
 .db-logout-text { cursor: pointer; color: #f0f0f0; text-decoration: underline; font-size: 13px; }
 .db-divider-small { color: #444; }
 
-/* 본문 레이아웃 */
-.db-container { max-width: 1200px; margin: 0 auto; }
-.db-page-content { padding: 0 50px 50px 50px; }
+/* --- 테이블 & 위젯 레이아웃 --- */
+.db-widget-box {
+  background: #fff;
+  padding: 30px;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+  margin-top: 20px;
+}
 
-/* 테이블 위젯 박스 */
-.db-widget-box { background: #fff; border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.05); padding: 30px; }
+.db-custom-table {
+  width: 100%;
+  border-collapse: collapse;
+}
 
-/* 테이블 스타일 */
-.db-custom-table { width: 100%; border-collapse: collapse; }
-.db-custom-table th { padding: 15px; border-bottom: 2px solid #333; background: #fafafa; font-weight: 700; }
-.db-custom-table td { padding: 15px; border-bottom: 1px solid #f0f0f0; text-align: center; }
-.db-custom-table tbody tr:hover td { background-color: #f9fffb; }
-.table-title-cell { text-align: left !important; padding-left: 20px !important; font-weight: 600; }
+.db-custom-table th {
+  padding: 15px;
+  border-bottom: 2px solid #eee;
+  text-align: left;
+  color: #777;
+  font-size: 14px;
+}
 
-/* 뱃지 스타일 */
-.tier-badge { display: inline-block; padding: 4px 10px; border-radius: 4px; font-size: 12px; font-weight: 800; }
-.tier-상 { background: #ffeaea; color: #ff4d4d; }
-.tier-중 { background: #fff5e6; color: #f39c12; }
-.tier-하 { background: #e8f4ff; color: #007bff; }
+.db-custom-table td {
+  padding: 15px;
+  border-bottom: 1px solid #f2f2f2;
+  color: #444;
+}
 
-.status-badge { display: inline-block; padding: 5px 12px; border-radius: 20px; font-size: 11px; font-weight: 700; }
-.status-badge.success { background: #e8f7ed; color: #2ecc71; border: 1px solid #2ecc71; }
-.status-badge.fail { background: #fdeaea; color: #e74c3c; border: 1px solid #e74c3c; }
+/* 데이터 없을 때 스타일 */
+.table-empty-row {
+  text-align: center;
+  padding: 60px 0 !important;
+  color: #bbb;
+  font-size: 16px;
+  background-color: #fafafa;
+}
 
-/* --- 버튼 스타일 (미니멀 Flat 버전) --- */
-.db-action-area { display: flex; justify-content: flex-end; margin-top: 25px; }
-.btn-add-problem {
-  background-color: #2ecc71;
-  color: white;
+/* --- 페이지네이션 (블랙 포인트) --- */
+.pagination-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  margin-top: 30px;
+}
+
+.page-number, .page-arrow {
+  border: 1px solid #ddd;
+  background: #fff;
+  padding: 7px 13px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.page-number.active {
+  background: #000;
+  color: #fff;
+  border-color: #000;
+}
+
+/* --- 하단 액션 영역 & 초록색 버튼 --- */
+.db-bottom-action {
+  display: flex;
+  justify-content: flex-end; /* 오른쪽 정렬 */
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid #eee;
+}
+
+.db-add-btn {
+  background-color: #2ecc71; /* 싱그러운 초록색 */
+  color: #ffffff;            /* 흰색 글씨 */
   border: none;
-  padding: 10px 35px;
-  border-radius: 6px;
-  font-weight: 700;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-weight: bold;
   font-size: 15px;
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: all 0.2s;
+  box-shadow: 0 4px 6px rgba(46, 204, 113, 0.2);
 }
-.btn-add-problem:hover { background-color: #27ae60; }
 
-.pagination { display: flex; justify-content: center; margin-top: 30px; gap: 20px; color: #bbb; font-weight: 700; cursor: pointer; }
-
+.db-add-btn:hover {
+  background-color: #27ae60;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(46, 204, 113, 0.3);
+}
 /* App.css에 추가/확인 */
 
 /* 오답 노트 페이지 전용 타이틀 강조 (선택사항) */
