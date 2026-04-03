@@ -322,31 +322,45 @@ router
     let conn;
 
     try{
-       const userId = req.user.id;
+
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+        const offset = (page - 1) * limit;
+        const userId = req.user.id;
+
         conn = await pool.getConnection();
 
-        // 1. 유저 정보 (테이블명 usertbl로 수정!)
-        const userRows = await conn.query("SELECT nickname FROM usertbl WHERE id = ?", [userId]);
-        // MariaDB 드라이버는 결과가 바로 배열일 수 있으므로 체크
-        const nickname = (userRows && userRows.length > 0) ? 
-                         (userRows[0].nickname || userRows[0][0]?.nickname) : "사용자";
+        //전체 데이터 개수 조회 (페이지네이션 계산용)
+        const [countResult] = await conn.query(
+            "SELECT COUNT(*) as total FROM problemtbl WHERE user_id = ?", 
+            [userId]
+        );
+        const totalCount = countResult.total || 0;
+        const totalPages = Math.ceil(totalCount / limit);
 
-        // 2. 게시물 데이터
-        const sql = `
+        //실제 데이터 가져오기 (JOIN + LIMIT/OFFSET)
+        const dataSql = `
             SELECT p.id, p.problem_id, c.title, c.tier, p.status, p.created_at 
             FROM problemtbl p 
             JOIN problem_cachetbl c ON p.problem_id = c.problem_id 
             WHERE p.user_id = ? 
             ORDER BY p.created_at DESC
+            LIMIT ? OFFSET ?
         `;
-        const rows = await conn.query(sql, [userId]);
 
-        console.log(`[BACKEND] 데이터 조회 완료: ${rows.length}건`);
+        const rows = await conn.query(dataSql, [userId, limit, offset]);
+        const finalRows = Array.isArray(rows) ? rows : [];
 
+        // 응답 전송
         return res.status(200).json({ 
             success: true, 
-            data: Array.isArray(rows) ? rows : [rows], // 배열 보장
-            user: { nickname }
+            data: finalRows,
+            user: { nickname: req.user.nickname },
+            pagination: {
+                totalCount,
+                totalPages: totalPages || 1,
+                currentPage: page
+            }
         });
 
     } catch(err) {
@@ -361,6 +375,39 @@ router
         }
     }
 })
+.get("/problem/check/:problemId", authmiddleware, async(req,res) => { //sloved.ac api 호출
+    let conn;
+    try{
+
+        const { problemId } = req.params;
+        conn = await pool.getConnection();
+
+        // 캐시 테이블에서 문제 정보만 쏙 빼오기
+        const [problem] = await conn.query(
+            "SELECT title, tier FROM problem_cachetbl WHERE problem_id = ?", 
+            [problemId]
+        );
+
+        if (!problem) {
+            return res.status(404).json({ success: false, message: "존재하지 않는 문제 번호입니다." });
+        }
+
+        res.json({ success: true, data: problem });
+
+    } catch(err) {
+        console.log(`문제 조회 중 오류가 발생했습니다 : ${err}`);
+
+        res.status(500).json({
+            success : false,
+            err_message : "서버 오류가 발생했습니다."
+        });
+
+    } finally {
+        if(conn){
+            conn.release();
+        }
+    }
+})
 .post("/problem/upload", authmiddleware, async(req, res) => {
     
     const { problem_id, title, tier, status, use_language } = req.body;
@@ -369,42 +416,37 @@ router
     let conn; 
 
     try{
-        conn = await pool.getConnection();
-        await conn.beginTransaction();
+        const { problem_id } = req.body; // 프론트에서 보낸 문제 번호
+        const userId = req.user.id;
 
-        // 1-1. 캐시 테이블 확인
-        const cacheCheck = await conn.query(
-            "SELECT title, tier FROM problem_cachetbl WHERE problem_id = ?", 
-            [problem_id]
-        );
-
-        let title, tier;
-
-        if (cacheCheck.length > 0) {
-            title = cacheCheck[0].title;
-            tier = cacheCheck[0].tier;
-        } else {
-            // 캐시에 없으면 solved.ac API 호출
-            const response = await axios.get(`https://solved.ac/api/v3/problem/show?problemId=${problem_id}`);
-            title = response.data.titleKo;
-            tier = getSimpleTier(response.data.level); // 상/중/하 매핑
-
-            await conn.query(
-                "INSERT INTO problem_cachetbl (problem_id, title, tier) VALUES (?, ?, ?)",
-                [problem_id, title, tier]
-            );
+        if (!problem_id) {
+            return res.status(400).json({ success: false, message: "문제 번호가 필요합니다." });
         }
 
-        // 유저 기록 저장
-        await conn.query(
-            "INSERT INTO problemtbl (user_id, problem_id, status, use_language, review) VALUES (?, ?, ?, ?, ?)",
-            [userId, problem_id, status, use_language, review || null]
+        conn = await pool.getConnection();
+
+        //중복 등록 방지 체크
+        const [alreadyExists] = await conn.query(
+            "SELECT id FROM problemtbl WHERE user_id = ? AND problem_id = ?", 
+            [userId, problem_id]
         );
 
-        await conn.commit();
-        res.status(201).json({ 
+        if (alreadyExists) {
+            return res.status(400).json({ success: false, message: "이미 내 목록에 있는 문제입니다." });
+        }
+
+        // 문제 등록 (초기 상태는 FAIL로 설정)
+        await conn.query(
+            "INSERT INTO problemtbl (user_id, problem_id, status) VALUES (?, ?, 'FAIL')",
+            [userId, problem_id]
+        );
+
+        console.log(`✅ [Success] ${req.user.nickname}님이 ${problem_id}번 문제를 등록했습니다.`);
+
+        return res.status(201).json({ 
             success: true, 
-            message: "등록 완료", data: { title, tier } });
+            message: "문제가 성공적으로 등록되었습니다." 
+        });
 
     } catch(err) {
         console.error(`게시물 조회 중 오류 발생 : ${err}`);
