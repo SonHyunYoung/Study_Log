@@ -321,44 +321,38 @@ router
 .get("/problem", authmiddleware, async(req, res) => {
     let conn;
 
+    console.log(req.user);
+    
     try{
-
         const page = parseInt(req.query.page) || 1;
-        const limit = parseInt(req.query.limit) || 10;
+        const limit = 10;
         const offset = (page - 1) * limit;
         const userId = req.user.id;
+        const nickname = req.user.nickname; // 토큰에서 추출
+
+        console.log(nickname);
 
         conn = await pool.getConnection();
+        
+        // 전체 개수 조회
+        const [countRes] = await conn.query("SELECT COUNT(*) as total FROM problemtbl WHERE user_id = ?", [userId]);
+        const totalCount = countRes.total || 0;
 
-        //전체 데이터 개수 조회 (페이지네이션 계산용)
-        const [countResult] = await conn.query(
-            "SELECT COUNT(*) as total FROM problemtbl WHERE user_id = ?", 
-            [userId]
-        );
-        const totalCount = countResult.total || 0;
-        const totalPages = Math.ceil(totalCount / limit);
-
-        //실제 데이터 가져오기 (JOIN + LIMIT/OFFSET)
-        const dataSql = `
+        // 데이터 조회 (JOIN)
+        const rows = await conn.query(`
             SELECT p.id, p.problem_id, c.title, c.tier, p.status, p.created_at 
             FROM problemtbl p 
             JOIN problem_cachetbl c ON p.problem_id = c.problem_id 
             WHERE p.user_id = ? 
-            ORDER BY p.created_at DESC
-            LIMIT ? OFFSET ?
-        `;
+            ORDER BY p.created_at DESC LIMIT ? OFFSET ?
+        `, [userId, limit, offset]);
 
-        const rows = await conn.query(dataSql, [userId, limit, offset]);
-        const finalRows = Array.isArray(rows) ? rows : [];
-
-        // 응답 전송
-        return res.status(200).json({ 
-            success: true, 
-            data: finalRows,
-            user: { nickname: req.user.nickname },
+        res.json({
+            success: true,
+            data: Array.isArray(rows) ? rows : [],
+            user: { nickname }, 
             pagination: {
-                totalCount,
-                totalPages: totalPages || 1,
+                totalPages: Math.ceil(totalCount / limit) || 1,
                 currentPage: page
             }
         });
@@ -441,7 +435,7 @@ router
             [userId, problem_id]
         );
 
-        console.log(`✅ [Success] ${req.user.nickname}님이 ${problem_id}번 문제를 등록했습니다.`);
+        console.log(`[Success] ${req.user.nickname}님이 ${problem_id}번 문제를 등록했습니다.`);
 
         return res.status(201).json({ 
             success: true, 
@@ -547,32 +541,29 @@ router
 
     try{
         
-        if (!req.user || !req.user.id) {
-            return res.status(401).json({ success: false, message: "인증 정보가 유효하지 않습니다." });
-        }
+        const page = parseInt(req.query.page) || 1;
+        const limit = 10;
+        const offset = (page - 1) * limit;
+        const userId = req.user.id;
+        const nickname = req.user.nickname;
 
-        const userId = req.user.id; 
         conn = await pool.getConnection();
+        const [countRes] = await conn.query("SELECT COUNT(*) as total FROM problemtbl WHERE user_id = ? AND status = 'FAIL'", [userId]);
+        const totalCount = countRes.total || 0;
 
-        // 2. 닉네임 가져오기 (usertbl!)
-        const [userRows] = await conn.query("SELECT nickname FROM usertbl WHERE id = ?", [userId]);
-        const nickname = userRows ? userRows.nickname : "사용자";
-
-        // 3. 오답 데이터 조회
-        const sql = `
+        const rows = await conn.query(`
             SELECT p.id, p.problem_id, c.title, c.tier, p.created_at 
             FROM problemtbl p 
             JOIN problem_cachetbl c ON p.problem_id = c.problem_id 
-            WHERE p.user_id = ? AND p.status = 'FAIL' 
-            ORDER BY p.created_at DESC
-        `;
-        const [rows] = await conn.query(sql, [userId]);
+            WHERE p.user_id = ? AND p.status = 'FAIL'
+            ORDER BY p.created_at DESC LIMIT ? OFFSET ?
+        `, [userId, limit, offset]);
 
-        // 닉네임과 데이터를 'user' 객체에 담아 전송
-        res.status(200).json({ 
-            success: true, 
-            data: rows,
-            user: { nickname } 
+        res.json({
+            success: true,
+            data: Array.isArray(rows) ? rows : [],
+            user: { nickname },
+            pagination: { totalPages: Math.ceil(totalCount / limit) || 1, currentPage: page }
         });
 
     } catch(err) {
