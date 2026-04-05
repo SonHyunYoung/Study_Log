@@ -22,7 +22,7 @@ function App() {
           {/* 회원가입 페이지 */}
           <Route path="/register" element={<Register />} />
 
-          {/* 문제 목록 & 오답 노트 (주석 해제해서 사용하세요) */}
+          {/* 문제 목록 & 오답 노트 */}
           <Route path="/problems" element={<Problem />} />
           <Route path="/incorrect" element={<Incorrect />} />
 
