@@ -577,96 +577,30 @@ body { font-family: 'Pretendard', sans-serif; background-color: #f4f7f9; color: 
 .db-logout-text { cursor: pointer; color: #f0f0f0; text-decoration: underline; font-size: 13px; }
 .db-divider-small { color: #444; }
 
-/* --- 테이블 & 위젯 레이아웃 --- */
-.db-widget-box {
-  background: #fff;
-  padding: 30px;
-  border-radius: 16px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
-  margin-top: 20px;
-}
+/* 공통 컨테이너 */
+.db-container { background-color: #f8f9fa; min-height: 100vh; }
+.db-page-content { padding: 40px 10%; }
+.db-page-title { font-size: 24px; font-weight: 800; border-left: 6px solid #000; padding-left: 15px; margin-bottom: 20px; }
 
-.db-custom-table {
-  width: 100%;
-  border-collapse: collapse;
-}
+/* 위젯 & 테이블 */
+.db-widget-box { background: #fff; padding: 30px; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); }
+.db-custom-table { width: 100%; border-collapse: collapse; }
+.db-custom-table th { padding: 15px; border-bottom: 2px solid #eee; text-align: left; color: #777; }
+.db-custom-table td { padding: 15px; border-bottom: 1px solid #f2f2f2; }
+.table-empty-row { text-align: center; padding: 60px 0 !important; color: #bbb; background: #fafafa; }
 
-.db-custom-table th {
-  padding: 15px;
-  border-bottom: 2px solid #eee;
-  text-align: left;
-  color: #777;
-  font-size: 14px;
-}
+/* 페이지네이션 */
+.pagination-container { display: flex; justify-content: center; gap: 8px; margin-top: 30px; }
+.pagination-container button { border: 1px solid #ddd; background: #fff; padding: 6px 12px; border-radius: 4px; cursor: pointer; }
+.pagination-container button.active { background: #000; color: #fff; border-color: #000; font-weight: bold; }
 
-.db-custom-table td {
-  padding: 15px;
-  border-bottom: 1px solid #f2f2f2;
-  color: #444;
-}
-
-/* 데이터 없을 때 스타일 */
-.table-empty-row {
-  text-align: center;
-  padding: 60px 0 !important;
-  color: #bbb;
-  font-size: 16px;
-  background-color: #fafafa;
-}
-
-/* --- 페이지네이션 (블랙 포인트) --- */
-.pagination-container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 8px;
-  margin-top: 30px;
-}
-
-.page-number, .page-arrow {
-  border: 1px solid #ddd;
-  background: #fff;
-  padding: 7px 13px;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: 0.2s;
-}
-
-.page-number.active {
-  background: #000;
-  color: #fff;
-  border-color: #000;
-}
-
-/* --- 하단 액션 영역 & 초록색 버튼 --- */
-.db-bottom-action {
-  display: flex;
-  justify-content: flex-end; /* 오른쪽 정렬 */
-  margin-top: 20px;
-  padding-top: 20px;
-  border-top: 1px solid #eee;
-}
-
+/* 하단 초록색 버튼 */
+.db-bottom-action { display: flex; justify-content: flex-end; margin-top: 20px; padding-top: 20px; border-top: 1px solid #eee; }
 .db-add-btn {
-  background-color: #2ecc71; /* 싱그러운 초록색 */
-  color: #ffffff;            /* 흰색 글씨 */
-  border: none;
-  padding: 12px 24px;
-  border-radius: 8px;
-  font-weight: bold;
-  font-size: 15px;
-  cursor: pointer;
-  transition: all 0.2s;
-  box-shadow: 0 4px 6px rgba(46, 204, 113, 0.2);
+  background-color: #2ecc71; color: #fff; border: none; padding: 12px 24px; 
+  border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s;
 }
-
-.db-add-btn:hover {
-  background-color: #27ae60;
-  transform: translateY(-2px);
-  box-shadow: 0 6px 12px rgba(46, 204, 113, 0.3);
-}
-/* App.css에 추가/확인 */
-
+.db-add-btn:hover { background-color: #27ae60; transform: translateY(-2px); }
 /* 오답 노트 페이지 전용 타이틀 강조 (선택사항) */
 .db-page-title {
   color: #222;
