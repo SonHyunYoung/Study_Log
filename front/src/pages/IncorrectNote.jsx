@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import IncorrectNoteModal from './IncorretcNoteModal';
 import '../App.css';
 
 const IncorrectNote = () => {
@@ -9,31 +10,44 @@ const IncorrectNote = () => {
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
 
+  // 모달 제어를 위한 상태 추가
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedProblem, setSelectedProblem] = useState(null);
+
   const handleLogout = () => {
     localStorage.clear();
     navigate('/');
   };
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const token = localStorage.getItem('token');
-        if (!token) { navigate('/login'); return; }
+  // 데이터를 가져오는 로직을 useCallback으로 분리하여 모달 성공 시 재사용 가능하게 함
+  const fetchData = useCallback(async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) { navigate('/login'); return; }
 
-        const res = await axios.get(`http://localhost:3000/incorrect?page=${currentPage}`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        if (res.data.success) setDbData(res.data);
-      } catch (err) {
-        if (err.response?.status === 401) navigate('/login');
-      } finally { setLoading(false); }
-    };
-    fetchData();
+      const res = await axios.get(`http://localhost:3000/incorrect?page=${currentPage}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.data.success) setDbData(res.data);
+    } catch (err) {
+      if (err.response?.status === 401) navigate('/login');
+    } finally {
+      setLoading(false);
+    }
   }, [currentPage, navigate]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  // 테이블 행 클릭 시 실행되는 함수
+  const handleRowClick = (problem) => {
+    setSelectedProblem(problem);
+    setIsModalOpen(true);
+  };
 
   if (loading) return <div className="db-loading-container">데이터 로딩 중...</div>;
 
-  // 💡 [해결 1] 변수 이름을 'notes'로 구조 분해 할당하여 사용합니다.
   const { 
     data: notes = [], 
     pagination = { totalPages: 1 }, 
@@ -72,20 +86,20 @@ const IncorrectNote = () => {
             <tbody>
               {notes.length > 0 ? (
                 notes.map((n, i) => (
-                  <tr key={n.id}>
+                  /* 행 클릭 이벤트와 스타일 클래스 추가 */
+                  <tr 
+                    key={n.id} 
+                    onClick={() => handleRowClick(n)} 
+                    className="table-row-clickable"
+                  >
                     <td>{(currentPage - 1) * 10 + (i + 1)}</td>
                     <td>{n.problem_id}</td>
                     <td className="table-title-cell">{n.title}</td>
-                    
-                    {/* 💡 [해결 2] .toLowerCase()를 제거하고 리더님의 기준대로 난이도 치환 
-                        하: Bronze(1-5), 중: Silver(6-10), 상: Gold 이상(11+)
-                    */}
                     <td>
                       <span className={`difficulty-text diff-${n.tier >= 11 ? 'gold' : n.tier >= 6 ? 'silver' : 'bronze'}`}>
                         {n.tier >= 11 ? '상' : n.tier >= 6 ? '중' : '하'}
                       </span>
                     </td>
-
                     <td>{new Date(n.created_at).toLocaleDateString()}</td>
                   </tr>
                 ))
@@ -124,6 +138,14 @@ const IncorrectNote = () => {
           </div>
         </div>
       </main>
+
+      {/* 오답 복습 모달 연결 */}
+      <IncorrectNoteModal 
+        isOpen={isModalOpen} 
+        onClose={() => setIsModalOpen(false)} 
+        problem={selectedProblem} 
+        onSuccess={fetchData} 
+      />
     </div>
   );
 };
