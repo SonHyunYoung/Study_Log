@@ -232,23 +232,15 @@ router
 
 //메인 페이지 데이터 관련 
 router
-.get("/main", async(req, res) => {
+.get("/main", authmiddleware, async(req, res) => {
     let conn; //db 연결 변수
 
     try{
-       const token = req.headers.authorization?.split(' ')[1];
-        if (!token) return res.status(401).json({ success: false, message: "인증 필요" });
+       conn = await pool.getConnection();
+        const userId = req.user.id;
+        const nickname = req.user.nickname;
 
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        const userId = decoded.id;
-
-        conn = await pool.getConnection();
-
-        // 1. 유저 정보 조회
-        const userRows = await conn.query("SELECT nickname FROM usertbl WHERE id = ?", [userId]);
-        const userData = (userRows && userRows.length > 0) ? userRows[0] : { nickname: "사용자" };
-
-        // 2. 상단 요약 위젯용 데이터   
+        // 1. 상단 4단 위젯용 통계
         const summaryRows = await conn.query(
             `SELECT 
                 COUNT(*) as total,
@@ -259,42 +251,45 @@ router
         );
         const s = summaryRows[0] || { total: 0, success: 0, fail: 0, retry: 0 };
 
-        // 3. 차트용 데이터: 난이도별 분포 (Tier 기준)
+        // 2. 난이도 분포
         const diffRaw = await conn.query(
-            `SELECT c.tier as name, COUNT(p.id) as value 
+            `SELECT 
+                CASE 
+                    WHEN c.tier >= 11 THEN '상'
+                    WHEN c.tier >= 6 THEN '중'
+                    ELSE '하'
+                END as name, 
+                COUNT(p.id) as value 
              FROM problemtbl p 
              JOIN problem_cachetbl c ON p.problem_id = c.problem_id 
              WHERE p.user_id = ? 
-             GROUP BY c.tier`, [userId]
+             GROUP BY name`, [userId]
         );
 
-        // 4. 차트용 데이터: 사용 언어별 분포
+        // 3. 언어 사용 통계
         const langRaw = await conn.query(
             `SELECT use_language as name, COUNT(*) as problems 
-             FROM problemtbl 
-             WHERE user_id = ? AND use_language IS NOT NULL 
-             GROUP BY use_language 
-             ORDER BY problems DESC`, [userId]
+             FROM problemtbl WHERE user_id = ? AND use_language IS NOT NULL 
+             GROUP BY use_language ORDER BY problems DESC`, [userId]
         );
 
-        // 5. 최근 틀린 문제 (우측 리스트용)
+        // 4. 최근 복습 필요 리스트 (최신 3개)
         const reviewList = await conn.query(
             `SELECT p.id, c.title, c.tier as diff 
-             FROM problemtbl p
-             JOIN problem_cachetbl c ON p.problem_id = c.problem_id
-             WHERE p.user_id = ? AND p.status = 'FAIL' 
-             ORDER BY p.updated_at DESC LIMIT 3`, [userId]
+             FROM problemtbl p JOIN problem_cachetbl c ON p.problem_id = c.problem_id
+             WHERE p.user_id = ? AND p.status = 'FAIL' ORDER BY p.updated_at DESC LIMIT 3`, [userId]
         );
 
+        // 모든 결과를 Number로 변환하여 JSON 전송 (BigInt 에러 방지)
         res.status(200).json({
             success: true,
-            user: userData,
+            user: { nickname },
             stats: {
-                summary: {
-                    total: Number(s.total),
-                    success: Number(s.success),
-                    fail: Number(s.fail),
-                    retry: Number(s.retry) // 💡 '복습 완료' 위젯에 꽂힐 데이터
+                summary: { 
+                    total: Number(s.total), 
+                    success: Number(s.success), 
+                    fail: Number(s.fail), 
+                    retry: Number(s.retry) 
                 },
                 difficultyData: diffRaw.map(d => ({ name: d.name, value: Number(d.value) })),
                 languageData: langRaw.map(l => ({ name: l.name, problems: Number(l.problems) })),
