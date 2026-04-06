@@ -4,13 +4,15 @@ import '../App.css';
 
 const ProblemDetailModal = ({ isOpen, onClose, problem, onSuccess }) => {
   const [isEditing, setIsEditing] = useState(false);
-  const [formData, setFormData] = useState({ use_language: '', first_memo: '' });
+  // first_memo를 memo로 변경
+  const [formData, setFormData] = useState({ use_language: '', memo: '' });
 
   useEffect(() => {
     if (problem) {
       setFormData({
         use_language: problem.use_language || 'C++',
-        first_memo: problem.first_memo || ''
+        // DB에서 가져온 problem.memo를 연결
+        memo: problem.memo || ''
       });
       setIsEditing(false);
     }
@@ -18,14 +20,15 @@ const ProblemDetailModal = ({ isOpen, onClose, problem, onSuccess }) => {
 
   if (!isOpen || !problem) return null;
 
+  // 수정 로직: memo 필드를 서버로 전송
   const handleUpdate = async () => {
     try {
       const token = localStorage.getItem('token');
       
       await axios.put(`http://localhost:3000/problem/update/${problem.id}`, {
-        ...formData,
-        status: problem.status,
-        retry_memo: problem.retry_memo 
+        use_language: formData.use_language,
+        memo: formData.memo,
+        status: problem.status
       }, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -35,6 +38,27 @@ const ProblemDetailModal = ({ isOpen, onClose, problem, onSuccess }) => {
       setIsEditing(false);
     } catch (err) {
       alert("수정 실패");
+    }
+  };
+
+  // 삭제 로직: axios.delete를 사용하여 서버에 삭제 요청
+  const handleDelete = async () => {
+    if (!window.confirm("정말 이 문제를 삭제하시겠습니까?")) return;
+
+    try {
+      const token = localStorage.getItem('token');
+      const res = await axios.delete(`http://localhost:3000/problem/delete/${problem.id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      if (res.data.success) {
+        alert("삭제되었습니다.");
+        onSuccess(); // 목록 새로고침
+        onClose(); // 모달 닫기
+      }
+    } catch (err) {
+      console.error("삭제 중 오류 발생:", err);
+      alert("삭제 실패");
     }
   };
 
@@ -83,8 +107,9 @@ const ProblemDetailModal = ({ isOpen, onClose, problem, onSuccess }) => {
             <textarea 
               className="modal-textarea"
               readOnly={!isEditing} 
-              value={formData.first_memo} 
-              onChange={(e) => setFormData({...formData, first_memo: e.target.value})}
+              // first_memo 대신 memo 연결
+              value={formData.memo} 
+              onChange={(e) => setFormData({...formData, memo: e.target.value})}
               rows="4"
             />
           </div>
@@ -98,7 +123,8 @@ const ProblemDetailModal = ({ isOpen, onClose, problem, onSuccess }) => {
             </div>
           ) : (
             <>
-              <button className="modal-btn-delete" onClick={() => { /* 삭제 로직 */ }}>삭제</button>
+              {/* 삭제 핸들러 연결 */}
+              <button className="modal-btn-delete" onClick={handleDelete}>삭제</button>
               <div className="footer-right-group">
                 <button className="modal-btn-edit" onClick={() => setIsEditing(true)}>정보 수정</button>
                 <button className="modal-btn-close" onClick={onClose}>닫기</button>
