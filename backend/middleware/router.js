@@ -321,39 +321,51 @@ router
 .get("/problem", authmiddleware, async(req, res) => {
     let conn;
 
-    console.log(req.user);
-    
     try{
         const page = parseInt(req.query.page) || 1;
         const limit = 10;
         const offset = (page - 1) * limit;
         const userId = req.user.id;
-        const nickname = req.user.nickname; // 토큰에서 추출
-
-        console.log(nickname);
+        const nickname = req.user.nickname; // 💡 닉네임 확보
 
         conn = await pool.getConnection();
-        
-        // 전체 개수 조회
-        const [countRes] = await conn.query("SELECT COUNT(*) as total FROM problemtbl WHERE user_id = ?", [userId]);
-        const totalCount = countRes.total || 0;
 
-        // 데이터 조회 (JOIN)
+        // 1. 전체 개수 조회 (BigInt 에러 방지용 Number 변환)
+        const countRes = await conn.query(
+            "SELECT COUNT(*) as total FROM problemtbl WHERE user_id = ?", 
+            [userId]
+        );
+        
+        // 💡 [해결] Number()로 감싸서 일반 숫자와 연산 가능하게 만듦
+        const totalCount = countRes.length > 0 ? Number(countRes[0].total) : 0;
+
+        // 2. 전체 목록 조회
+        // 💡 목록에서도 언어와 메모가 보일 수 있게 컬럼을 추가했습니다.
         const rows = await conn.query(`
-            SELECT p.id, p.problem_id, c.title, c.tier, p.status, p.created_at 
+            SELECT 
+                p.id, 
+                p.problem_id, 
+                c.title, 
+                c.tier, 
+                p.use_language, 
+                p.first_memo, 
+                p.status, 
+                p.created_at 
             FROM problemtbl p 
             JOIN problem_cachetbl c ON p.problem_id = c.problem_id 
             WHERE p.user_id = ? 
-            ORDER BY p.created_at DESC LIMIT ? OFFSET ?
+            ORDER BY p.created_at DESC 
+            LIMIT ? OFFSET ?
         `, [userId, limit, offset]);
 
+        // 3. 최종 응답 (닉네임 포함)
         res.json({
             success: true,
             data: Array.isArray(rows) ? rows : [],
-            user: { nickname }, 
-            pagination: {
-                totalPages: Math.ceil(totalCount / limit) || 1,
-                currentPage: page
+            user: { nickname }, // 💡 헤더 표시용 닉네임 전송
+            pagination: { 
+                totalPages: Math.ceil(totalCount / limit) || 1, 
+                currentPage: page 
             }
         });
 
@@ -371,22 +383,38 @@ router
 })
 .get("/problem/check/:problemId", authmiddleware, async(req,res) => { //sloved.ac api 호출
     let conn;
-    try{
+    const { problemId } = req.params;
 
-        const { problemId } = req.params;
+    try{
         conn = await pool.getConnection();
 
-        // 캐시 테이블에서 문제 정보만 쏙 빼오기
-        const [problem] = await conn.query(
+        // 1. DB 캐시 확인
+        const rows = await conn.query(
             "SELECT title, tier FROM problem_cachetbl WHERE problem_id = ?", 
             [problemId]
         );
 
-        if (!problem) {
-            return res.status(404).json({ success: false, message: "존재하지 않는 문제 번호입니다." });
+        if (rows && rows.length > 0) {
+            return res.json({ success: true, data: rows[0] });
         }
 
-        res.json({ success: true, data: problem });
+        // 2. Solved.ac API 호출
+        const response = await axios.get(`https://solved.ac/api/v3/problem/show`, {
+            params: { problemId: problemId }
+        });
+
+        const { titleKo, level } = response.data; // level은 0~31 사이의 정수
+
+        await conn.query(
+            "INSERT INTO problem_cachetbl (problem_id, title, tier) VALUES (?, ?, ?)",
+            [problemId, titleKo, level]
+        );
+
+        // 4. 프론트에도 원본 숫자 그대로 응답
+        res.json({ 
+            success: true, 
+            data: { title: titleKo, tier: level } 
+        });
 
     } catch(err) {
         console.log(`문제 조회 중 오류가 발생했습니다 : ${err}`);
@@ -540,30 +568,45 @@ router
     let conn;
 
     try{
-        
         const page = parseInt(req.query.page) || 1;
         const limit = 10;
         const offset = (page - 1) * limit;
         const userId = req.user.id;
-        const nickname = req.user.nickname;
+        const nickname = req.user.nickname; // 인증 미들웨어에서 가져온 닉네임
 
         conn = await pool.getConnection();
-        const [countRes] = await conn.query("SELECT COUNT(*) as total FROM problemtbl WHERE user_id = ? AND status = 'FAIL'", [userId]);
-        const totalCount = countRes.total || 0;
+
+        const countRes = await conn.query(
+            "SELECT COUNT(*) as total FROM problemtbl WHERE user_id = ? AND status = 'FAIL'", 
+            [userId]
+        );
+        
+        const totalCount = countRes.length > 0 ? Number(countRes[0].total) : 0;
 
         const rows = await conn.query(`
-            SELECT p.id, p.problem_id, c.title, c.tier, p.created_at 
+            SELECT 
+                p.id, 
+                p.problem_id, 
+                c.title, 
+                c.tier, 
+                p.use_language, 
+                p.first_memo, 
+                p.created_at 
             FROM problemtbl p 
             JOIN problem_cachetbl c ON p.problem_id = c.problem_id 
             WHERE p.user_id = ? AND p.status = 'FAIL'
-            ORDER BY p.created_at DESC LIMIT ? OFFSET ?
+            ORDER BY p.created_at DESC 
+            LIMIT ? OFFSET ?
         `, [userId, limit, offset]);
 
         res.json({
             success: true,
             data: Array.isArray(rows) ? rows : [],
-            user: { nickname },
-            pagination: { totalPages: Math.ceil(totalCount / limit) || 1, currentPage: page }
+            user: { nickname }, // 💡 헤더 표시용 닉네임 데이터
+            pagination: { 
+                totalPages: Math.ceil(totalCount / limit) || 1, 
+                currentPage: page 
+            }
         });
 
     } catch(err) {
