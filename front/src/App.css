@@ -1010,3 +1010,106 @@ body { font-family: 'Pretendard', sans-serif; background-color: #f4f7f9; color: 
   border-radius: 50%;
   margin-right: 7px;
 }
+
+/* --- 게시판(문제 목록) 난이도 텍스트 스타일 --- */
+.difficulty-text {
+  background: none !important;    /* 💡 배경 제거 */
+  padding: 0 !important;         /* 💡 여백 제거 */
+  border: none !important;       /* 💡 테두리 제거 */
+  font-weight: 800;              /* 글씨 두께는 강조 */
+  font-size: 15px;               /* 시인성을 위해 크기 살짝 조정 */
+}
+
+/* 티어별 글자 색상만 깔끔하게 적용 */
+.difficulty-text.diff-bronze { color: #ad5600; } /* 하 (브론즈) */
+.difficulty-text.diff-silver { color: #435f7a; } /* 중 (실버) */
+.difficulty-text.diff-gold   { color: #ec9a00; } /* 상 (골드) */
+
+/* --- 모달 기본 구조 --- */
+.modal-overlay {
+  position: fixed;
+  top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex; justify-content: center; align-items: center;
+  z-index: 2000;
+}
+
+.modal-box {
+  background: white;
+  width: 500px;
+  border-radius: 16px;
+  padding: 30px;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+}
+
+/* --- 제목 강조 박스 --- */
+.title-highlight-box {
+  background: #f8f9fa;
+  padding: 15px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  border-left: 5px solid #34495e;
+}
+
+/* --- 입력 영역 그리드 --- */
+.modal-input-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+  margin-bottom: 20px;
+}
+
+/* --- 상태 표시 (수정 불가 느낌) --- */
+.status-display-box {
+  background: #eee;
+  padding: 10px;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 14px;
+  color: #555;
+}
+
+.status-help-text {
+  display: block;
+  font-size: 11px;
+  color: #999;
+  font-weight: 400;
+  margin-top: 3px;
+}
+
+/* --- 입력 폼 요소 --- */
+.modal-select, .modal-textarea {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-family: inherit;
+  box-sizing: border-box;
+}
+
+.modal-textarea[readonly] {
+  background-color: #fcfcfc;
+  border-color: #eee;
+  color: #777;
+}
+
+/* --- 푸터 버튼 정렬 --- */
+.modal-footer {
+  display: flex;
+  justify-content: space-between; /* 양끝 정렬 */
+  align-items: center;
+  margin-top: 30px;
+}
+
+.footer-right-group {
+  display: flex;
+  gap: 10px;
+}
+
+/* --- 버튼 색상 --- */
+.modal-btn-save { background: #2ecc71; color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 800; cursor: pointer; }
+.modal-btn-edit { background: #34495e; color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 800; cursor: pointer; }
+.modal-btn-delete { background: #e74c3c; color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 800; cursor: pointer; }
+.modal-btn-cancel, .modal-btn-close { background: #eee; color: #333; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 700; cursor: pointer; }
+
+.modal-footer button:hover { opacity: 0.8; }

@@ -83,8 +83,11 @@ const AppProblemModal = ({ isOpen, onClose, onSuccess }) => {
                 <div className="modal-section">
                   <label>수행 언어</label>
                   <select value={useLanguage} onChange={(e) => setUseLanguage(e.target.value)}>
-                    <option value="C++">C++</option><option value="Python">Python</option>
-                    <option value="Java">Java</option><option value="JavaScript">JavaScript</option>
+                    <option value="C">C</option>
+                    <option value="C++">C++</option>
+                    <option value="C#">C#</option>
+                    <option value="Java">Java</option>
+                    <option value="Python">Python</option>
                   </select>
                 </div>
               </div>

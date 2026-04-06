@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import RegisterModal from './AppProblemModal';
+import ProblemDetailModal from './ProblemDetailModal'; // 상세 모달 추가
 import '../App.css';
 
 const Problems = () => {
@@ -9,7 +10,11 @@ const Problems = () => {
   const [dbData, setDbData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false); // 등록 모달
+  
+  // 상세 모달 제어용 상태 추가
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  const [selectedProblem, setSelectedProblem] = useState(null);
 
   const handleLogout = () => {
     localStorage.clear();
@@ -24,6 +29,7 @@ const Problems = () => {
         return;
       }
 
+      // 페이지네이션 쿼리 전송
       const response = await axios.get(`http://localhost:3000/problem?page=${currentPage}&limit=10`, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -44,6 +50,12 @@ const Problems = () => {
   useEffect(() => {
     fetchData();
   }, [fetchData]);
+
+  // 행 클릭 시 실행될 함수
+  const handleRowClick = (problem) => {
+    setSelectedProblem(problem); // 클릭한 문제 데이터 저장
+    setIsDetailModalOpen(true);  // 상세 모달 열기
+  };
 
   if (loading) return <div className="db-loading-container">데이터 로딩 중...</div>;
 
@@ -91,7 +103,8 @@ const Problems = () => {
             <tbody>
               {problems && problems.length > 0 ? (
                 problems.map((p, index) => (
-                  <tr key={p.id || index}>
+                  // 💡 tr에 onClick 이벤트와 clickable 클래스 추가
+                  <tr key={p.id || index} onClick={() => handleRowClick(p)} className="table-row-clickable">
                     <td>{(currentPage - 1) * 10 + (index + 1)}</td>
                     <td>{p.problem_id}</td>
                     <td className="table-title-cell">{p.title}</td>
@@ -118,6 +131,7 @@ const Problems = () => {
             </tbody>
           </table>
 
+          {/* --- 페이지네이션 --- */}
           <div className="pagination-container">
             <button 
               className="page-arrow"
@@ -154,9 +168,18 @@ const Problems = () => {
         </div>
       </main>
 
+      {/* --- 1. 신규 문제 추가 모달 --- */}
       <RegisterModal 
         isOpen={isModalOpen} 
         onClose={() => setIsModalOpen(false)} 
+        onSuccess={fetchData} 
+      />
+
+      {/* --- 2. 상세 정보/수정/삭제 모달 연결 --- */}
+      <ProblemDetailModal 
+        isOpen={isDetailModalOpen} 
+        onClose={() => setIsDetailModalOpen(false)} 
+        problem={selectedProblem} 
         onSuccess={fetchData} 
       />
     </div>
