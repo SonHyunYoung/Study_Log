@@ -3,16 +3,16 @@ import axios from 'axios';
 import '../App.css';
 
 const IncorrectNoteModal = ({ isOpen, onClose, problem, onSuccess }) => {
-  // 백엔드 필드명인 'review'에 맞춰 상태 관리
+  // 1. 상태 관리 필드명을 'memo'로 통일
   const [formData, setFormData] = useState({
-    review: ''
+    memo: ''
   });
 
   useEffect(() => {
     if (problem) {
       setFormData({
-        // 기존에 review 데이터가 있으면 불러오고, 없으면 빈 값 처리
-        review: problem.review || ''
+        // 2. 백엔드에서 불러온 데이터도 problem.memo로 접근
+        memo: problem.memo || ''
       });
     }
   }, [problem]);
@@ -20,24 +20,25 @@ const IncorrectNoteModal = ({ isOpen, onClose, problem, onSuccess }) => {
   if (!isOpen || !problem) return null;
 
   const handleSaveReview = async () => {
-  try {
-    const token = localStorage.getItem('token');
-    
-    // 무결성을 위해 memo와 함께 변경될 status를 명시적으로 전달합니다.
-    await axios.put(`http://localhost:3000/incorrect/update/${problem.id}`, {
-      memo: formData.memo,
-      status: 'RETRY_SUCCESS' // 오답 노트 작성 시 '복습 완료'로 상태 전이
-    }, {
-      headers: { Authorization: `Bearer ${token}` }
-    });
+    try {
+      const token = localStorage.getItem('token');
+      
+      // 3. formData.memo를 백엔드 'memo' 필드에 담아 전송
+      await axios.put(`http://localhost:3000/incorrect/update/${problem.id}`, {
+        memo: formData.memo,
+        status: 'RETRY_SUCCESS' // 오답 노트 작성 완료 시 상태 변경
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
 
-    alert("기록이 완료되었습니다.");
-    onSuccess(); 
-    onClose();
-  } catch (err) {
-    alert("저장 중 오류가 발생했습니다.");
-  }
-};
+      alert("기록이 완료되었습니다.");
+      onSuccess(); 
+      onClose();
+    } catch (err) {
+      console.error("오답 노트 저장 에러:", err);
+      alert("저장 중 오류가 발생했습니다.");
+    }
+  };
 
   return (
     <div className="modal-overlay">
@@ -61,9 +62,10 @@ const IncorrectNoteModal = ({ isOpen, onClose, problem, onSuccess }) => {
             <label>복습 메모 </label>
             <textarea 
               className="modal-textarea review-textarea"
-              placeholder="해결 방법을 기록하세요."
-              value={formData.review}
-              onChange={(e) => setFormData({ review: e.target.value })}
+              placeholder="해결 방법을 기록."
+              // 4. value와 onChange 핸들러도 memo로 변경
+              value={formData.memo}
+              onChange={(e) => setFormData({ memo: e.target.value })}
               rows="10"
             />
           </div>
