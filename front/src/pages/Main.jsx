@@ -41,7 +41,8 @@ const MainDashboard = () => {
           <span className="db-nav-link" onClick={() => navigate('/incorrect')}>오답 노트</span>
         </nav>
         <div className="db-user-info">
-          <span><strong>{user.nickname}</strong>님</span>
+          <span className='db-nickname-text'><strong>{user.nickname}</strong>님</span>
+          <span className="db-header-divider">|</span>
           <span className="db-logout-text" onClick={() => {localStorage.clear(); navigate('/');}}>로그아웃</span>
         </div>
       </header>

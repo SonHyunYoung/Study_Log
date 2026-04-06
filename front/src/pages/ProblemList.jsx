@@ -74,7 +74,7 @@ const Problems = () => {
           <span className="db-nav-link" onClick={() => navigate('/incorrect')}>오답 노트</span>
         </nav>
         <div className="db-user-info">
-          <span className="db-nickname-text"><strong>{user.nickname}</strong> 님</span>
+          <span className="db-nickname-text"><strong>{user.nickname}</strong>님</span>
           <span className="db-header-divider">|</span>
           <span className="db-logout-text" onClick={handleLogout}>로그아웃</span>
         </div>
