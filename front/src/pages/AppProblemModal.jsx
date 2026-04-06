@@ -5,9 +5,11 @@ import '../App.css';
 const AppProblemModal = ({ isOpen, onClose, onSuccess }) => {
   const [inputProblemId, setInputProblemId] = useState('');
   const [preview, setPreview] = useState(null);
-  const [status, setStatus] = useState('SUCCESS'); // 해결 여부
-  const [useLanguage, setUseLanguage] = useState('C++'); // 수행 언어
-  const [firstMemo, setFirstMemo] = useState('');
+  const [status, setStatus] = useState('SUCCESS');
+  const [useLanguage, setUseLanguage] = useState('C++');
+  
+  /* 1. 상태 변수 이름을 firstMemo에서 memo로 변경 */
+  const [memo, setMemo] = useState(''); 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   if (!isOpen) return null;
@@ -27,16 +29,18 @@ const AppProblemModal = ({ isOpen, onClose, onSuccess }) => {
   };
 
   const handleSubmit = async () => {
-    if (!preview || !firstMemo || isSubmitting) return;
+    /* 2. 유효성 검사 시 변수명 확인 */
+    if (!preview || !memo || isSubmitting) return; 
     setIsSubmitting(true);
     try {
       const token = localStorage.getItem('token');
-      // 💡 백엔드 destructuring과 Key 이름을 100% 일치시킴
+      
+      /* 3. 백엔드에서 받는 키값 'memo'와 전송할 상태 'memo'를 일치시킴 */
       await axios.post(`http://localhost:3000/problem/upload`, {
         problem_id: inputProblemId,
         status: status,
         use_language: useLanguage,
-        first_memo: firstMemo
+        memo: memo 
       }, { headers: { Authorization: `Bearer ${token}` } });
       
       onSuccess();
@@ -47,14 +51,14 @@ const AppProblemModal = ({ isOpen, onClose, onSuccess }) => {
     } finally { setIsSubmitting(false); }
   };
 
-  const handleClose = () => { setInputProblemId(''); setPreview(null); setFirstMemo(''); onClose(); };
+  /* 4. 초기화 함수에서도 memo로 수정 */
+  const handleClose = () => { setInputProblemId(''); setPreview(null); setMemo(''); onClose(); };
 
   return (
     <div className="modal-overlay">
       <div className="modal-box modal-wide">
         <div className="modal-header"><h3>학습 데이터 입력</h3></div>
         <div className="modal-body">
-          {/* 조회 섹션: 입력창 + 버튼 한 줄 배치 */}
           <div className="modal-section">
             <label>문제 번호 조회</label>
             <div className="input-group-inline">
@@ -72,7 +76,6 @@ const AppProblemModal = ({ isOpen, onClose, onSuccess }) => {
                 </div>
               </div>
 
-              {/* 해결 여부(좌) / 수행 언어(우) */}
               <div className="modal-row-grid">
                 <div className="modal-section">
                   <label>해결 여부</label>
@@ -94,7 +97,13 @@ const AppProblemModal = ({ isOpen, onClose, onSuccess }) => {
 
               <div className="modal-section">
                 <label>{status === 'SUCCESS' ? '알고리즘 및 풀이 과정' : '미해결 사유 분석'}</label>
-                <textarea value={firstMemo} onChange={(e) => setFirstMemo(e.target.value)} placeholder="분석 내용을 기록하세요." rows="5" />
+                {/* 5. value와 onChange 핸들러를 memo 상태에 연결 */}
+                <textarea 
+                   value={memo} 
+                   onChange={(e) => setMemo(e.target.value)} 
+                   placeholder="분석 내용을 기록하세요." 
+                   rows="5" 
+                />
               </div>
             </>
           )}
