@@ -186,7 +186,7 @@ router
         }
     }
 })
-.delete("/Delete_Account", authmiddleware, async(req, res) => {
+.delete("/register/delete", authmiddleware, async(req, res) => {
     const { password } = req.body;
     const user_id = req.user_id;
 
@@ -353,7 +353,7 @@ router
                 c.title, 
                 c.tier, 
                 p.use_language, 
-                p.first_memo, 
+                p.memo, 
                 p.status, 
                 p.created_at 
             FROM problemtbl p 
@@ -437,7 +437,7 @@ router
 })
 .post("/problem/upload", authmiddleware, async(req, res) => {
     
-   const { problem_id, status, use_language, first_memo } = req.body;
+   const { problem_id, status, use_language, memo } = req.body;
     const userId = req.user.id;
 
     let conn;
@@ -445,11 +445,11 @@ router
         conn = await pool.getConnection();
     
         const sql = `
-            INSERT INTO problemtbl (user_id, problem_id, use_language, status, first_memo) 
+            INSERT INTO problemtbl (user_id, problem_id, use_language, status, memo) 
             VALUES (?, ?, ?, ?, ?)
         `;
         
-        await conn.query(sql, [userId, problem_id, use_language, status, first_memo]);
+        await conn.query(sql, [userId, problem_id, use_language, status, memo]);
 
         res.status(201).json({ success: true, message: "저장 성공" });
     }
@@ -468,31 +468,43 @@ router
 .put("/problem/update/:id", authmiddleware, async(req, res) => {
     
     const { id } = req.params;
-    const { status, use_language } = req.body; // 수정할 데이터들
+    // 1. req.body에서 메모 필드(first_memo, retry_memo)를 추가로 꺼내옵니다.
+    const { status, use_language, memo } = req.body; 
     const userId = req.user.id;
 
     let conn;
 
-    try{
+    try {
         conn = await pool.getConnection();
         
         const sql = `
             UPDATE problemtbl 
-            SET status = ?, use_language = ?, updated_at = NOW() 
+            SET status = ?, 
+                use_language = ?, 
+                memo = ?, 
+                updated_at = NOW() 
             WHERE id = ? AND user_id = ?
         `;
         
-        const result = await conn.query(sql, [status, use_language, id, userId]);
+        const result = await conn.query(sql, [
+            status, 
+            use_language, 
+            memo,  
+            id, 
+            userId
+        ]);
 
         if (result.affectedRows === 0) {
             return res.status(404).json({ 
                 success: false, 
-                message: "수정할 대상을 찾을 수 없거나 권한이 없습니다." });
+                message: "수정할 대상을 찾을 수 없거나 권한이 없습니다." 
+            });
         }
 
         res.status(200).json({ 
             success: true, 
-            message: "수정을 성공하였습니다." });
+            message: "성공적으로 수정되었습니다." 
+        });
 
     } catch(err) {
         console.error(`게시물 조회 중 오류 발생 : ${err}`);
@@ -573,7 +585,7 @@ router
                 c.title, 
                 c.tier, 
                 p.use_language, 
-                p.first_memo, 
+                p.memo, 
                 p.created_at 
             FROM problemtbl p 
             JOIN problem_cachetbl c ON p.problem_id = c.problem_id 
@@ -612,28 +624,33 @@ router
     const { review, status } = req.body; // review(오답 이유), status(재풀이 성공 시 SUCCESS로 변경 가능)
     const userId = req.user.id;
     
+    //데이터 무결성 체크 : 오답 노트 저장 시 상태가 없거나 잘못되었을 시 "복습완료"로 저장해 데이터 일관성 맞춤
+    const finalStatus = (status === 'SUCCESS' || status === 'RETRY_SUCCESS') 
+                        ? status 
+                        : 'RETRY_SUCCESS';
+
     let conn;
 
     try{
         conn = await pool.getConnection();
-        
-        // review 내용과 status를 동시에 업데이트할 수 있게 구성
+
         const sql = `
             UPDATE problemtbl 
-            SET review = ?, status = ?, updated_at = NOW() 
+            SET memo = ?, status = ?, updated_at = NOW() 
             WHERE id = ? AND user_id = ?
         `;
 
-        const result = await conn.query(sql, [review, status || 'FAIL', id, userId]);
+        // finalStatus를 사용하여 잘못된 값이 DB에 들어가는 것을 방지합니다.
+        const result = await conn.query(sql, [memo, finalStatus, id, userId]);
 
         if (result.affectedRows === 0) {
             return res.status(404).json({ 
                 success: false, 
-                message: "수정할 대상을 찾을 수 없습니다." });
+                message: "수정 권한이 없거나 대상을 찾을 수 없습니다." 
+            });
         }
-        res.status(200).json({
-             success: true, 
-             message: "오답 노트가 업데이트되었습니다!" });  
+
+        res.status(200).json({ success: true, message: "오답노트 업데이트 완료" });
 
     } catch(err) {
         console.error(`오답노트 업데이트 실패 : ${err}`);
