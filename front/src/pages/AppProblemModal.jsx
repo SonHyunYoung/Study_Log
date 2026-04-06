@@ -1,81 +1,110 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState } from 'react';
 import axios from 'axios';
 import '../App.css';
 
-const Problems = () => {
-  const navigate = useNavigate();
-  const [dbData, setDbData] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [currentPage, setCurrentPage] = useState(1);
+const AppProblemModal = ({ isOpen, onClose, onSuccess }) => {
+  const [inputProblemId, setInputProblemId] = useState('');
+  const [preview, setPreview] = useState(null);
+  const [status, setStatus] = useState('SUCCESS'); // 해결 여부
+  const [useLanguage, setUseLanguage] = useState('C++'); // 수행 언어
+  const [firstMemo, setFirstMemo] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const token = localStorage.getItem('token');
-        const res = await axios.get(`http://localhost:3000/problem?page=${currentPage}`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        if (res.data.success) setDbData(res.data);
-      } catch (err) {
-        if (err.response?.status === 401) navigate('/login');
-      } finally { setLoading(false); }
-    };
-    fetchData();
-  }, [currentPage, navigate]);
+  if (!isOpen) return null;
 
-  if (loading) return <div className="db-loading-container">Loading...</div>;
+  const handleCheck = async () => {
+    if (!inputProblemId) return;
+    try {
+      const token = localStorage.getItem('token');
+      const res = await axios.get(`http://localhost:3000/problem/check/${inputProblemId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.data.success) setPreview(res.data.data);
+    } catch (err) {
+      alert("문제를 찾을 수 없습니다.");
+      setPreview(null);
+    }
+  };
 
-  const { data: problems = [], pagination = { totalPages: 1 }, user = { nickname: '사용자' } } = dbData || {};
+  const handleSubmit = async () => {
+    if (!preview || !firstMemo || isSubmitting) return;
+    setIsSubmitting(true);
+    try {
+      const token = localStorage.getItem('token');
+      // 💡 백엔드 destructuring과 Key 이름을 100% 일치시킴
+      await axios.post(`http://localhost:3000/problem/upload`, {
+        problem_id: inputProblemId,
+        status: status,
+        use_language: useLanguage,
+        first_memo: firstMemo
+      }, { headers: { Authorization: `Bearer ${token}` } });
+      
+      onSuccess();
+      handleClose();
+      alert("학습 데이터가 저장되었습니다.");
+    } catch (err) {
+      alert("저장 오류: " + (err.response?.data?.message || "서버 에러"));
+    } finally { setIsSubmitting(false); }
+  };
+
+  const handleClose = () => { setInputProblemId(''); setPreview(null); setFirstMemo(''); onClose(); };
 
   return (
-    <div className="db-container">
-      <header className="db-header-dark">
-        <div className="db-logo" onClick={() => navigate('/main')}>Study LOG</div>
-        <nav className="db-nav-center">
-          <span className="db-nav-link" onClick={() => navigate('/main')}>메인</span>
-          <span className="db-nav-link active">문제 목록</span>
-          <span className="db-nav-link" onClick={() => navigate('/incorrect')}>오답 노트</span>
-        </nav>
-        <div className="db-user-info"><strong>{user.nickname}</strong>님 | <span onClick={() => {localStorage.clear(); navigate('/');}}>로그아웃</span></div>
-      </header>
+    <div className="modal-overlay">
+      <div className="modal-box modal-wide">
+        <div className="modal-header"><h3>학습 데이터 입력</h3></div>
+        <div className="modal-body">
+          {/* 조회 섹션: 입력창 + 버튼 한 줄 배치 */}
+          <div className="modal-section">
+            <label>문제 번호 조회</label>
+            <div className="input-group-inline">
+              <input type="number" value={inputProblemId} onChange={(e) => setInputProblemId(e.target.value)} placeholder="번호 입력" className="input-narrow" />
+              <button className="modal-check-btn-inline" onClick={handleCheck}>조회</button>
+            </div>
+          </div>
 
-      <main className="db-page-content">
-        <h2 className="db-page-title">전체 문제 목록</h2>
-        <div className="db-widget-box">
-          <table className="db-custom-table">
-            <thead><tr><th>No</th><th>문제번호</th><th>제 목</th><th>난이도</th><th>상태</th><th>등록일</th></tr></thead>
-            <tbody>
-              {problems.length > 0 ? (
-                problems.map((p, i) => (
-                  <tr key={p.id}>
-                    <td>{(currentPage - 1) * 10 + (i + 1)}</td>
-                    <td>{p.problem_id}</td>
-                    <td className="table-title-cell">{p.title}</td>
-                    <td><span className={`tier-badge tier-${p.tier?.toLowerCase()}`}>{p.tier}</span></td>
-                    <td><span className={`status-badge status-${p.status?.toLowerCase()}`}>{p.status}</span></td>
-                    <td>{new Date(p.created_at).toLocaleDateString()}</td>
-                  </tr>
-                ))
-              ) : (
-                <tr><td colSpan="6" className="table-empty-row">등록된 데이터가 없습니다.</td></tr>
-              )}
-            </tbody>
-          </table>
-          <div className="pagination-container">
-            <button disabled={currentPage === 1} onClick={() => setCurrentPage(p => p - 1)}>&lt;</button>
-            {Array.from({ length: pagination.totalPages }, (_, i) => i + 1).map(n => (
-              <button key={n} className={n === currentPage ? 'active' : ''} onClick={() => setCurrentPage(n)}>{n}</button>
-            ))}
-            <button disabled={currentPage === pagination.totalPages} onClick={() => setCurrentPage(p => p + 1)}>&gt;</button>
-          </div>
-          <div className="db-bottom-action">
-            <button className="db-add-btn">+ 문제 추가</button>
-          </div>
+          {preview && (
+            <>
+              <div className="problem-preview-card">
+                <div className="info-row">
+                  <span className="info-label">문제명</span>
+                  <span className="info-value">{preview.title}</span>
+                </div>
+              </div>
+
+              {/* 해결 여부(좌) / 수행 언어(우) */}
+              <div className="modal-row-grid">
+                <div className="modal-section">
+                  <label>해결 여부</label>
+                  <select value={status} onChange={(e) => setStatus(e.target.value)}>
+                    <option value="SUCCESS">성공</option><option value="FAIL">미해결</option>
+                  </select>
+                </div>
+                <div className="modal-section">
+                  <label>수행 언어</label>
+                  <select value={useLanguage} onChange={(e) => setUseLanguage(e.target.value)}>
+                    <option value="C++">C++</option><option value="Python">Python</option>
+                    <option value="Java">Java</option><option value="JavaScript">JavaScript</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="modal-section">
+                <label>{status === 'SUCCESS' ? '알고리즘 및 풀이 과정' : '미해결 사유 분석'}</label>
+                <textarea value={firstMemo} onChange={(e) => setFirstMemo(e.target.value)} placeholder="분석 내용을 기록하세요." rows="5" />
+              </div>
+            </>
+          )}
         </div>
-      </main>
+        <div className="modal-footer">
+          <button className="modal-submit-btn" disabled={!preview || isSubmitting} onClick={handleSubmit}>
+            {isSubmitting ? '저장 중' : '등록하기'}
+          </button>
+          <button className="modal-close-btn" onClick={handleClose}>취소</button>
+        </div>
+      </div>
     </div>
   );
 };
 
-export default Problems;
+export default AppProblemModal;

@@ -639,3 +639,234 @@ body { font-family: 'Pretendard', sans-serif; background-color: #f4f7f9; color: 
   cursor: pointer;
   transition: color 0.2s;
 }
+
+/* --- 1. 모달 전체 레이아웃 (Overlay & Box) --- */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.65); /* 배경 어둡게 */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  backdrop-filter: blur(2px); /* 배경 살짝 흐리게 (트렌디한 느낌) */
+}
+
+.modal-box {
+  background: #ffffff;
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+  animation: modalFadeIn 0.3s ease-out; /* 등장 애니메이션 */
+}
+
+@keyframes modalFadeIn {
+  from { opacity: 0; transform: translateY(-20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.modal-wide {
+  width: 500px;
+}
+
+/* --- 2. 헤더 섹션 --- */
+.modal-header {
+  padding: 20px 25px;
+  border-bottom: 1px solid #f0f0f0;
+  background: #fafafa;
+}
+
+.modal-header h3 {
+  margin: 0;
+  font-size: 18px;
+  color: #222;
+  font-weight: 700;
+}
+
+/* --- 3. 바디 섹션 (입력 영역) --- */
+.modal-body {
+  padding: 25px;
+}
+
+.modal-section {
+  margin-bottom: 22px;
+}
+
+.modal-section label {
+  display: block;
+  font-size: 13px;
+  color: #555;
+  margin-bottom: 8px;
+  font-weight: 600;
+}
+
+/* --- 4. [UX 개선] 문제 번호 + 조회 버튼 가로 배치 --- */
+.input-group-inline {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.input-narrow {
+  flex: 1; /* 입력창이 최대한 공간 차지 */
+}
+
+.modal-check-btn-inline {
+  background-color: #34495e; /* 전문적인 다크 블루그레이 */
+  color: #fff;
+  border: none;
+  padding: 11px 20px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.2s;
+}
+
+.modal-check-btn-inline:hover {
+  background-color: #2c3e50;
+}
+
+/* --- 5. 조회 결과 (문제명 카드) --- */
+.problem-preview-card {
+  background-color: #f8f9fa;
+  padding: 18px;
+  border-radius: 10px;
+  border: 1px solid #edf2f7;
+  margin-bottom: 25px;
+}
+
+.info-row {
+  display: flex;
+  align-items: center;
+}
+
+.info-label {
+  font-size: 12px;
+  color: #a0aec0;
+  margin-right: 20px;
+  width: 50px;
+  font-weight: 600;
+}
+
+.info-value {
+  font-size: 15px;
+  font-weight: 700;
+  color: #2d3748;
+}
+
+/* --- 6. 2단 그리드 (해결여부 / 언어) --- */
+.modal-row-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+/* --- 7. 입력 요소 공통 (Input, Select, Textarea) --- */
+.modal-body input, 
+.modal-body select, 
+.modal-body textarea {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 14px;
+  color: #4a5568;
+  box-sizing: border-box;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.modal-body input:focus, 
+.modal-body select:focus, 
+.modal-body textarea:focus {
+  border-color: #2ecc71;
+  box-shadow: 0 0 0 3px rgba(46, 204, 113, 0.1);
+}
+
+.modal-body textarea {
+  resize: none;
+  line-height: 1.6;
+}
+
+/* --- 8. 푸터 버튼 (등록 왼쪽, 취소 오른쪽 배치) --- */
+.modal-footer {
+  padding: 18px 25px;
+  background: #fafafa;
+  border-top: 1px solid #f0f0f0;
+  display: flex;
+  justify-content: flex-end; /* 전체 우측 정렬 */
+  gap: 12px;
+}
+
+/* 등록하기 버튼 */
+.modal-submit-btn {
+  background: #2ecc71;
+  color: #ffffff;
+  border: none;
+  padding: 12px 28px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.modal-submit-btn:hover:not(:disabled) {
+  background: #27ae60;
+}
+
+.modal-submit-btn:disabled {
+  background: #cbd5e0;
+  cursor: not-allowed;
+}
+
+/* 취소 버튼 */
+.modal-close-btn {
+  background: #edf2f7;
+  color: #718096;
+  border: none;
+  padding: 12px 28px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.modal-close-btn:hover {
+  background: #e2e8f0;
+  color: #4a5568;
+}
+
+.modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: flex; justify-content: center; align-items: center; z-index: 1000; }
+.modal-box { background: #fff; border-radius: 14px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.2); width: 480px; }
+.modal-header { padding: 18px 25px; border-bottom: 1px solid #eee; background: #fafafa; }
+.modal-header h3 { margin: 0; font-size: 17px; color: #333; }
+.modal-body { padding: 25px; }
+
+/* 조회 한 줄 배치 */
+.input-group-inline { display: flex; gap: 10px; align-items: center; }
+.input-narrow { flex: 1; }
+.modal-check-btn-inline { background: #333; color: #fff; border: none; padding: 10px 18px; border-radius: 6px; font-size: 13px; font-weight: bold; cursor: pointer; white-space: nowrap; }
+
+.problem-preview-card { background: #fcfcfc; padding: 15px; border-radius: 8px; border: 1px solid #eee; margin-bottom: 20px; }
+.info-label { font-size: 13px; color: #999; margin-right: 15px; width: 50px; display: inline-block; }
+.info-value { font-size: 14px; font-weight: 600; color: #333; }
+
+.modal-section { margin-bottom: 20px; }
+.modal-section label { display: block; font-size: 13px; color: #666; margin-bottom: 6px; font-weight: bold; }
+.modal-row-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+
+.modal-body input, select, textarea { width: 100%; padding: 11px; border: 1px solid #ddd; border-radius: 6px; outline: none; box-sizing: border-box; }
+.modal-body input:focus, select:focus, textarea:focus { border-color: #2ecc71; }
+.modal-body textarea { resize: none; }
+
+.modal-footer { padding: 15px 25px; background: #fafafa; border-top: 1px solid #eee; display: flex; justify-content: flex-end; gap: 10px; }
+.modal-submit-btn { background: #2ecc71; color: #fff; border: none; padding: 11px 24px; border-radius: 8px; font-weight: bold; cursor: pointer; }
+.modal-close-btn { background: #eee; color: #666; border: none; padding: 11px 24px; border-radius: 8px; font-weight: 600; cursor: pointer; }

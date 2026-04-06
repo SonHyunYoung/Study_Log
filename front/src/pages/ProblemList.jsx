@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import RegisterModal from './AppProblemModal';
 import '../App.css';
 
 const Problems = () => {
@@ -8,29 +9,41 @@ const Problems = () => {
   const [dbData, setDbData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // 로그아웃 핸들러 (메인과 동일)
   const handleLogout = () => {
     localStorage.clear();
     navigate('/');
   };
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const token = localStorage.getItem('token');
-        if (!token) { navigate('/login'); return; }
+  const fetchData = useCallback(async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        navigate('/login');
+        return;
+      }
 
-        const res = await axios.get(`http://localhost:3000/problem?page=${currentPage}&limit=10`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        if (res.data.success) setDbData(res.data);
-      } catch (err) {
-        if (err.response?.status === 401) navigate('/login');
-      } finally { setLoading(false); }
-    };
-    fetchData();
+      const response = await axios.get(`http://localhost:3000/problem?page=${currentPage}&limit=10`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      if (response.data.success) {
+        setDbData(response.data);
+      }
+    } catch (err) {
+      console.error("데이터 로드 에러:", err);
+      if (err.response?.status === 401 || err.response?.status === 403) {
+        navigate('/login');
+      }
+    } finally {
+      setLoading(false);
+    }
   }, [currentPage, navigate]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
   if (loading) return <div className="db-loading-container">데이터 로딩 중...</div>;
 
@@ -42,6 +55,7 @@ const Problems = () => {
 
   return (
     <div className="db-container">
+      {/* --- 상단 헤더 --- */}
       <header className="db-header-dark">
         <div className="db-logo" onClick={() => navigate('/main')}>Study LOG</div>
         <nav className="db-nav-center">
@@ -50,50 +64,101 @@ const Problems = () => {
           <span className="db-nav-link" onClick={() => navigate('/incorrect')}>오답 노트</span>
         </nav>
         <div className="db-user-info">
-          <span className="db-nickname-text"><strong>{user.nickname}</strong>님</span>
+          <span className="db-nickname-text"><strong>{user.nickname}</strong> 님</span>
           <span className="db-header-divider">|</span>
           <span className="db-logout-text" onClick={handleLogout}>로그아웃</span>
         </div>
       </header>
 
+      {/* --- 메인 콘텐츠 영역 --- */}
       <main className="db-page-content">
-        <h2 className="db-page-title">전체 문제 목록</h2>
+        <div className="db-title-area">
+          <h2 className="db-page-title">전체 문제 목록</h2>
+        </div>
+
         <div className="db-widget-box">
           <table className="db-custom-table">
             <thead>
-              <tr><th>No</th><th>문제번호</th><th>제 목</th><th>난이도</th><th>상태</th><th>등록일</th></tr>
+              <tr>
+                <th>No</th>
+                <th>문제번호</th>
+                <th>제 목</th>
+                <th>난이도</th>
+                <th>상태</th>
+                <th>등록일</th>
+              </tr>
             </thead>
             <tbody>
-              {problems.length > 0 ? (
-                problems.map((p, i) => (
-                  <tr key={p.id}>
-                    <td>{(currentPage - 1) * 10 + (i + 1)}</td>
+              {problems && problems.length > 0 ? (
+                problems.map((p, index) => (
+                  <tr key={p.id || index}>
+                    <td>{(currentPage - 1) * 10 + (index + 1)}</td>
                     <td>{p.problem_id}</td>
                     <td className="table-title-cell">{p.title}</td>
-                    <td><span className={`tier-badge tier-${p.tier?.toLowerCase()}`}>{p.tier}</span></td>
-                    <td><span className={`status-badge status-${p.status?.toLowerCase()}`}>{p.status}</span></td>
+                    
+                    <td>
+                      <span className={`difficulty-text diff-${p.tier >= 11 ? 'gold' : p.tier >= 6 ? 'silver' : 'bronze'}`}>
+                        {p.tier >= 11 ? '상' : p.tier >= 6 ? '중' : '하'}
+                      </span>
+                    </td>
+
+                    <td>
+                      <span className={`status-badge status-${p.status?.toLowerCase() || 'default'}`}>
+                        {p.status === 'FAIL' ? '미해결' : p.status === 'SUCCESS' ? '정답' : '복습완료'}
+                      </span>
+                    </td>
                     <td>{new Date(p.created_at).toLocaleDateString()}</td>
                   </tr>
                 ))
               ) : (
-                <tr><td colSpan="6" className="table-empty-row">등록된 데이터가 없습니다.</td></tr>
+                <tr>
+                  <td colSpan="6" className="table-empty-row">등록된 데이터가 없습니다.</td>
+                </tr>
               )}
             </tbody>
           </table>
 
           <div className="pagination-container">
-            <button disabled={currentPage === 1} onClick={() => setCurrentPage(p => p - 1)}>&lt;</button>
-            {Array.from({ length: pagination.totalPages }, (_, i) => i + 1).map(n => (
-              <button key={n} className={n === currentPage ? 'active' : ''} onClick={() => setCurrentPage(n)}>{n}</button>
+            <button 
+              className="page-arrow"
+              disabled={currentPage === 1}
+              onClick={() => setCurrentPage(prev => prev - 1)}
+            >
+              &lt;
+            </button>
+            
+            {Array.from({ length: pagination.totalPages }, (_, i) => i + 1).map((num) => (
+              <button 
+                key={num} 
+                className={`page-number ${num === currentPage ? 'active' : ''}`}
+                onClick={() => setCurrentPage(num)}
+              >
+                {num}
+              </button>
             ))}
-            <button disabled={currentPage === pagination.totalPages} onClick={() => setCurrentPage(p => p + 1)}>&gt;</button>
+            
+            <button 
+              className="page-arrow"
+              disabled={currentPage === pagination.totalPages}
+              onClick={() => setCurrentPage(prev => prev + 1)}
+            >
+              &gt;
+            </button>
           </div>
 
           <div className="db-bottom-action">
-            <button className="db-add-btn">+ 문제 추가</button>
+            <button className="db-add-btn" onClick={() => setIsModalOpen(true)}>
+              + 문제 추가
+            </button>
           </div>
         </div>
       </main>
+
+      <RegisterModal 
+        isOpen={isModalOpen} 
+        onClose={() => setIsModalOpen(false)} 
+        onSuccess={fetchData} 
+      />
     </div>
   );
 };
