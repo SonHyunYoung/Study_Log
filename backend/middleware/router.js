@@ -236,7 +236,7 @@ router
     let conn; //db 연결 변수
 
     try{
-        const token = req.headers.authorization?.split(' ')[1];
+       const token = req.headers.authorization?.split(' ')[1];
         if (!token) return res.status(401).json({ success: false, message: "인증 필요" });
 
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
@@ -244,52 +244,64 @@ router
 
         conn = await pool.getConnection();
 
-        // 1. 유저 정보 (nickname)
+        // 1. 유저 정보 조회
         const userRows = await conn.query("SELECT nickname FROM usertbl WHERE id = ?", [userId]);
-        const userData = (userRows && userRows.length > 0) ? userRows[0] : { nickname: "test" };
+        const userData = (userRows && userRows.length > 0) ? userRows[0] : { nickname: "사용자" };
 
-        // 2. 상단 요약 (BigInt -> Number 변환)
+        // 2. 상단 요약 위젯용 데이터   
         const summaryRows = await conn.query(
-            `SELECT COUNT(*) as total,
-                COUNT(CASE WHEN status IN ('SUCCESS', 'RETRY_SUCCESS') THEN 1 END) as correct,
-                COUNT(CASE WHEN status = 'FAIL' THEN 1 END) as incorrect
+            `SELECT 
+                COUNT(*) as total,
+                COUNT(CASE WHEN status = 'SUCCESS' THEN 1 END) as success,
+                COUNT(CASE WHEN status = 'FAIL' THEN 1 END) as fail,
+                COUNT(CASE WHEN status = 'RETRY_SUCCESS' THEN 1 END) as retry
              FROM problemtbl WHERE user_id = ?`, [userId]
         );
-        const s = summaryRows[0] || { total: 0, correct: 0, incorrect: 0 };
+        const s = summaryRows[0] || { total: 0, success: 0, fail: 0, retry: 0 };
 
-        // 3. 차트 데이터 (BigInt -> Number 변환)
+        // 3. 차트용 데이터: 난이도별 분포 (Tier 기준)
         const diffRaw = await conn.query(
-            `SELECT c.tier as name, COUNT(p.id) as value FROM problemtbl p 
+            `SELECT c.tier as name, COUNT(p.id) as value 
+             FROM problemtbl p 
              JOIN problem_cachetbl c ON p.problem_id = c.problem_id 
-             WHERE p.user_id = ? GROUP BY c.tier`, [userId]
+             WHERE p.user_id = ? 
+             GROUP BY c.tier`, [userId]
         );
 
+        // 4. 차트용 데이터: 사용 언어별 분포
         const langRaw = await conn.query(
-            `SELECT use_language as name, COUNT(*) as problems FROM problemtbl 
-             WHERE user_id = ? AND use_language IS NOT NULL GROUP BY use_language ORDER BY problems DESC`, [userId]
+            `SELECT use_language as name, COUNT(*) as problems 
+             FROM problemtbl 
+             WHERE user_id = ? AND use_language IS NOT NULL 
+             GROUP BY use_language 
+             ORDER BY problems DESC`, [userId]
         );
 
+        // 5. 최근 틀린 문제 (우측 리스트용)
         const reviewList = await conn.query(
-            `SELECT p.id, c.title, c.tier as diff FROM problemtbl p
+            `SELECT p.id, c.title, c.tier as diff 
+             FROM problemtbl p
              JOIN problem_cachetbl c ON p.problem_id = c.problem_id
-             WHERE p.user_id = ? AND p.status = 'FAIL' ORDER BY p.updated_at DESC LIMIT 3`, [userId]
+             WHERE p.user_id = ? AND p.status = 'FAIL' 
+             ORDER BY p.updated_at DESC LIMIT 3`, [userId]
         );
 
-        // JSON 응답 시 BigInt 에러 방지를 위해 Number() 강제 변환
         res.status(200).json({
             success: true,
             user: userData,
             stats: {
                 summary: {
                     total: Number(s.total),
-                    correct: Number(s.correct),
-                    incorrect: Number(s.incorrect)
+                    success: Number(s.success),
+                    fail: Number(s.fail),
+                    retry: Number(s.retry) // 💡 '복습 완료' 위젯에 꽂힐 데이터
                 },
                 difficultyData: diffRaw.map(d => ({ name: d.name, value: Number(d.value) })),
                 languageData: langRaw.map(l => ({ name: l.name, problems: Number(l.problems) })),
                 reviewList: reviewList || []
             }
         });
+        
     } catch(err) {
         console.log(`데이터 읽어오는 중 오류 발생 : ${err}`);
 
@@ -336,11 +348,9 @@ router
             [userId]
         );
         
-        // 💡 [해결] Number()로 감싸서 일반 숫자와 연산 가능하게 만듦
         const totalCount = countRes.length > 0 ? Number(countRes[0].total) : 0;
 
         // 2. 전체 목록 조회
-        // 💡 목록에서도 언어와 메모가 보일 수 있게 컬럼을 추가했습니다.
         const rows = await conn.query(`
             SELECT 
                 p.id, 
@@ -432,45 +442,23 @@ router
 })
 .post("/problem/upload", authmiddleware, async(req, res) => {
     
-    const { problem_id, title, tier, status, use_language } = req.body;
+   const { problem_id, status, use_language, first_memo } = req.body;
     const userId = req.user.id;
 
-    let conn; 
-
-    try{
-        const { problem_id } = req.body; // 프론트에서 보낸 문제 번호
-        const userId = req.user.id;
-
-        if (!problem_id) {
-            return res.status(400).json({ success: false, message: "문제 번호가 필요합니다." });
-        }
-
+    let conn;
+    try {
         conn = await pool.getConnection();
+    
+        const sql = `
+            INSERT INTO problemtbl (user_id, problem_id, use_language, status, first_memo) 
+            VALUES (?, ?, ?, ?, ?)
+        `;
+        
+        await conn.query(sql, [userId, problem_id, use_language, status, first_memo]);
 
-        //중복 등록 방지 체크
-        const [alreadyExists] = await conn.query(
-            "SELECT id FROM problemtbl WHERE user_id = ? AND problem_id = ?", 
-            [userId, problem_id]
-        );
-
-        if (alreadyExists) {
-            return res.status(400).json({ success: false, message: "이미 내 목록에 있는 문제입니다." });
-        }
-
-        // 문제 등록 (초기 상태는 FAIL로 설정)
-        await conn.query(
-            "INSERT INTO problemtbl (user_id, problem_id, status) VALUES (?, ?, 'FAIL')",
-            [userId, problem_id]
-        );
-
-        console.log(`[Success] ${req.user.nickname}님이 ${problem_id}번 문제를 등록했습니다.`);
-
-        return res.status(201).json({ 
-            success: true, 
-            message: "문제가 성공적으로 등록되었습니다." 
-        });
-
-    } catch(err) {
+        res.status(201).json({ success: true, message: "저장 성공" });
+    }
+     catch(err) {
         console.error(`게시물 조회 중 오류 발생 : ${err}`);
 
         res.status(500).json({
