@@ -621,7 +621,7 @@ router
 .put("/incorrect/update/:id", authmiddleware, async(req, res) => {
     
     const { id } = req.params;
-    const { review, status } = req.body; // review(오답 이유), status(재풀이 성공 시 SUCCESS로 변경 가능)
+    const { memo, status } = req.body; // review(오답 이유), status(재풀이 성공 시 SUCCESS로 변경 가능)
     const userId = req.user.id;
     
     //데이터 무결성 체크 : 오답 노트 저장 시 상태가 없거나 잘못되었을 시 "복습완료"로 저장해 데이터 일관성 맞춤
