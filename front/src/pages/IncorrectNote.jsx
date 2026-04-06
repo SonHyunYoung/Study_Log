@@ -33,7 +33,12 @@ const IncorrectNote = () => {
 
   if (loading) return <div className="db-loading-container">데이터 로딩 중...</div>;
 
-  const { data: notes = [], pagination = { totalPages: 1 }, user = { nickname: '사용자' } } = dbData || {};
+  // 💡 [해결 1] 변수 이름을 'notes'로 구조 분해 할당하여 사용합니다.
+  const { 
+    data: notes = [], 
+    pagination = { totalPages: 1 }, 
+    user = { nickname: '사용자' } 
+  } = dbData || {};
 
   return (
     <div className="db-container">
@@ -56,7 +61,13 @@ const IncorrectNote = () => {
         <div className="db-widget-box">
           <table className="db-custom-table">
             <thead>
-              <tr><th>No</th><th>문제번호</th><th>제 목</th><th>난이도</th><th>등록일</th></tr>
+              <tr>
+                <th>No</th>
+                <th>문제번호</th>
+                <th>제 목</th>
+                <th>난이도</th>
+                <th>등록일</th>
+              </tr>
             </thead>
             <tbody>
               {notes.length > 0 ? (
@@ -65,7 +76,16 @@ const IncorrectNote = () => {
                     <td>{(currentPage - 1) * 10 + (i + 1)}</td>
                     <td>{n.problem_id}</td>
                     <td className="table-title-cell">{n.title}</td>
-                    <td><span className={`tier-badge tier-${n.tier?.toLowerCase()}`}>{n.tier}</span></td>
+                    
+                    {/* 💡 [해결 2] .toLowerCase()를 제거하고 리더님의 기준대로 난이도 치환 
+                        하: Bronze(1-5), 중: Silver(6-10), 상: Gold 이상(11+)
+                    */}
+                    <td>
+                      <span className={`difficulty-text diff-${n.tier >= 11 ? 'gold' : n.tier >= 6 ? 'silver' : 'bronze'}`}>
+                        {n.tier >= 11 ? '상' : n.tier >= 6 ? '중' : '하'}
+                      </span>
+                    </td>
+
                     <td>{new Date(n.created_at).toLocaleDateString()}</td>
                   </tr>
                 ))
@@ -74,12 +94,33 @@ const IncorrectNote = () => {
               )}
             </tbody>
           </table>
+
           <div className="pagination-container">
-            <button disabled={currentPage === 1} onClick={() => setCurrentPage(p => p - 1)}>&lt;</button>
-            {Array.from({ length: pagination.totalPages }, (_, i) => i + 1).map(n => (
-              <button key={n} className={n === currentPage ? 'active' : ''} onClick={() => setCurrentPage(n)}>{n}</button>
+            <button 
+              className="page-arrow" 
+              disabled={currentPage === 1} 
+              onClick={() => setCurrentPage(p => p - 1)}
+            >
+              &lt;
+            </button>
+            
+            {Array.from({ length: pagination.totalPages }, (_, i) => i + 1).map(num => (
+              <button 
+                key={num} 
+                className={`page-number ${num === currentPage ? 'active' : ''}`} 
+                onClick={() => setCurrentPage(num)}
+              >
+                {num}
+              </button>
             ))}
-            <button disabled={currentPage === pagination.totalPages} onClick={() => setCurrentPage(p => p + 1)}>&gt;</button>
+            
+            <button 
+              className="page-arrow" 
+              disabled={currentPage === pagination.totalPages} 
+              onClick={() => setCurrentPage(p => p + 1)}
+            >
+              &gt;
+            </button>
           </div>
         </div>
       </main>
