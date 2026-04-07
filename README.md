@@ -2,10 +2,24 @@
 
 ## 프로젝트 목적과 범위
  - 프로젝트 목적<br>
-   본 프로젝트는~~<br>
- - 범위<br>
-   범위~~!
- 
+   본 프로젝트는 사용자가 오답의 원인을 직접 기록하고, 'FAIL' 상태에서 'RETRY_SUCCESS' 상태로 전이되는 과정을 시각화함으로써 메타인지 기반의 자기주도적 학습을 지원하는 관리 시스템의 구축을 목표로 삼고있음.<br>
+   
+ - 포함 내용 <br>
+   1. 인증 및 보안: JWT 기반의 회원 인증 및 Bcrypt 암호화를 통한 사용자 데이터 보호.
+
+   2. 데이터 연동 및 최적화: Solved.ac API를 통한 문제 정보(제목, 티어) 자동 수집 및 캐싱 테이블을 활용한 서버 부하 최소화.
+
+   3. 학습 상태 관리: SUCCESS, FAIL, RETRY_SUCCESS 3단계 상태 전이 로직 구현.
+
+   4. UX 특화 기능: 가독성을 고려한 8개 단위의 데이터 페이징, 오답 복기 시 이전 기록 참조 UI, 중복 등록 원천 차단 로직.
+
+   5. 통계 대시보드: 전체 풀이 현황 및 난이도별 분포 시각화.
+
+ - 불포함 내용 <br>
+   1. 백준 등의 플렛폼 내에서 문제 풀이 후 결과 제출 시 자동으로 결과를 자동적으로 가져오는 것이 아닌, 사용자가 결과를 직접 입력하도록 제한함.
+
+   2. 모바일 앱 개발은 제외하며, PC 환경에 최적화된 웹 서비스로 구현함.
+      
 ## 분석
  - [유스케이스와 유스케이스 명세서](docs/usecase.md "유스케이스")
  - [요구분석명세서](docs/srs.md "요구분석명세서")
@@ -158,6 +172,39 @@ flowchart TD
 - `react-router-dom` : 라우팅 및 페이지 관리
 - `recharts` : 데이터 시각화
 
+### 데이터 베이스 erd
+``` mermaid
+erDiagram
+    usertbl ||--o{ problemtbl : "records"
+    problem_cachetbl ||--o{ problemtbl : "is referenced by"
+
+    usertbl {
+        int id PK "AUTO_INCREMENT"
+        string email UK "NOT NULL"
+        string password_hash "NOT NULL"
+        string nickname "NOT NULL (15자)"
+        boolean is_varifide "DEFAULT FALSE"
+        timestamp created_at
+    }
+
+    problem_cachetbl {
+        int problem_id PK "백준 문제 번호"
+        string title "NOT NULL"
+        int tier "NOT NULL"
+        string tags "NULL"
+    }
+
+    problemtbl {
+        int id PK "AUTO_INCREMENT"
+        int user_id FK "REFERENCES usertbl(id)"
+        int problem_id FK "REFERENCES problem_cachetbl(problem_id)"
+        string use_language "NULL"
+        enum status "'SUCCESS', 'FAIL', 'RETRY_SUCCESS'"
+        text memo "최종 풀이 및 오답 내용 (이전 first_memo)"
+        timestamp created_at
+        timestamp updated_at
+    }
+```
 ## 실험
 - [테스트 시나리오](docs/test_scenario.md "테스트시나리오")
 
