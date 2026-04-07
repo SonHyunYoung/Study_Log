@@ -3,40 +3,43 @@ import axios from 'axios';
 import '../App.css';
 
 const IncorrectNoteModal = ({ isOpen, onClose, problem, onSuccess }) => {
-  // 1. 상태 관리 필드명을 'memo'로 통일
-  const [formData, setFormData] = useState({
-    memo: ''
-  });
+  const [newMemo, setNewMemo] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
-    if (problem) {
-      setFormData({
-        // 2. 백엔드에서 불러온 데이터도 problem.memo로 접근
-        memo: problem.memo || ''
-      });
+    if (isOpen) {
+      setNewMemo(''); 
     }
-  }, [problem]);
+  }, [isOpen]);
 
   if (!isOpen || !problem) return null;
 
   const handleSaveReview = async () => {
+    if (!newMemo.trim()) {
+      alert("풀이 내용을 입력해주세요.");
+      return;
+    }
+    
+    setIsSubmitting(true);
     try {
       const token = localStorage.getItem('token');
       
-      // 3. formData.memo를 백엔드 'memo' 필드에 담아 전송
+      // [데이터 저장] 기존 메모는 버리고, 새로 작성한 풀이(newMemo)만 저장
       await axios.put(`http://localhost:3000/incorrect/update/${problem.id}`, {
-        memo: formData.memo,
-        status: 'RETRY_SUCCESS' // 오답 노트 작성 완료 시 상태 변경
+        memo: newMemo, 
+        status: 'RETRY_SUCCESS'
       }, {
         headers: { Authorization: `Bearer ${token}` }
       });
 
-      alert("기록이 완료되었습니다.");
+      alert("복습 기록이 완료되었습니다.");
       onSuccess(); 
       onClose();
     } catch (err) {
-      console.error("오답 노트 저장 에러:", err);
+      console.error("저장 에러:", err);
       alert("저장 중 오류가 발생했습니다.");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -44,38 +47,48 @@ const IncorrectNoteModal = ({ isOpen, onClose, problem, onSuccess }) => {
     <div className="modal-overlay">
       <div className="modal-box review-modal">
         <div className="modal-header">
-          <h3>오답 노트 작성</h3>
-          <span className="modal-problem-id">No. {problem.problem_id}</span>
+          <div className="header-title-group">
+            <h3>오답 기록 작성</h3>
+            <span className="modal-problem-id">No. {problem.problem_id}</span>
+          </div>
         </div>
 
         <div className="modal-body">
-          <div className="review-target-box">
-            <div className="detail-item">
-              <strong>대상 문제:</strong> <span>{problem.title}</span>
-            </div>
-            <div className="detail-item">
-              <strong>사용 언어:</strong> <span>{problem.use_language}</span>
+          <div className="review-target-info">
+            <strong>{problem.title}</strong>
+            <span className="lang-tag">{problem.use_language}</span>
+          </div>
+
+          {/* 기존 오답 이유 (참조용으로만 노출) */}
+          <div className="reason-display-box">
+            <label className="reason-label">이전 오답 이유</label>
+            <div className="reason-content">
+              {problem.memo || "기록된 내용이 없습니다."}
             </div>
           </div>
 
+          {/* 새로운 풀이 내용 입력 */}
           <div className="modal-section">
-            <label>복습 메모 </label>
+            <label className="input-label">최종 풀이 및 학습 내용</label>
             <textarea 
-              className="modal-textarea review-textarea"
-              placeholder="해결 방법을 기록."
-              // 4. value와 onChange 핸들러도 memo로 변경
-              value={formData.memo}
-              onChange={(e) => setFormData({ memo: e.target.value })}
+              className="modal-textarea review-input"
+              placeholder="해결한 로직이나 정답 코드를 기록하세요."
+              value={newMemo}
+              onChange={(e) => setNewMemo(e.target.value)}
               rows="10"
             />
           </div>
         </div>
 
         <div className="modal-footer">
-          <div className="footer-right-group" style={{ marginLeft: 'auto' }}>
-            <button className="modal-btn-close" onClick={onClose}>취소</button>
-            <button className="modal-btn-save" onClick={handleSaveReview}>변경 저장</button>
-          </div>
+          <button className="modal-btn-close" onClick={onClose}>취소</button>
+          <button 
+            className="modal-btn-save-review" 
+            onClick={handleSaveReview}
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? '처리 중' : '복습 완료 및 저장'}
+          </button>
         </div>
       </div>
     </div>
