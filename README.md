@@ -282,12 +282,36 @@ erDiagram
 - 구현결과는 다음과 같음. 
 
 1. 로그인 페이지
+ <img width="1919" height="1031" alt="image" src="https://github.com/user-attachments/assets/a161db8c-cc1e-404e-bdaa-63d3cf454497" />
+
 2. 회원가입 페이지
-3. 메인 데쉬보드
+
+<img width="1918" height="1020" alt="image" src="https://github.com/user-attachments/assets/5832768d-1c04-44ed-966a-9dae23d56877" />
+
+3. 메인 대시보드
+
+<img width="1917" height="1007" alt="image" src="https://github.com/user-attachments/assets/5b27b798-71d7-4812-86e3-0c2d4bae9a1d" />
+
+
 4. 문제 게시판
+
+<img width="1917" height="1027" alt="image" src="https://github.com/user-attachments/assets/bf0eaff5-dde0-4716-b2d4-c8858bb4b3aa" />
+
+
 5. 문제 등록 모달
+
+<img width="621" height="892" alt="image" src="https://github.com/user-attachments/assets/3d6425c5-fa19-4653-9f5c-b3bbaa607ca9" />
+
+
 6. 오답노트
+
+<img width="1919" height="831" alt="image" src="https://github.com/user-attachments/assets/c88e9052-6ae7-4acb-8819-78d0bc60b216" />
+
+
 7. 오답노트 등록 모달
+
+<img width="623" height="943" alt="image" src="https://github.com/user-attachments/assets/b7d14976-354e-4ac2-aa2c-cb8e2f94a3a5" />
+
 
 - 추후 개선 사항
  1. 이메일 인증 과정 추가 : 현제 이메일 유효성 검증 로직을 구현하지 않아, 존재하지 않는 이메일이더라고 가입이 가능. 회원 가입 시 이메일 유효성 검증 추가 필요.
