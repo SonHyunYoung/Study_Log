@@ -279,8 +279,6 @@ erDiagram
 
 ## 결론
 
-- 구현결과는 다음과 같음. 
-
 ### 1. 로그인 페이지
  <img width="1919" height="1031" alt="image" src="https://github.com/user-attachments/assets/a161db8c-cc1e-404e-bdaa-63d3cf454497" />
 
